@@ -2,7 +2,6 @@
 
 package com.mohammed.notes.feature.note.presentation.view_notes_screen
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -429,7 +428,7 @@ fun ViewNotesScreen(
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        focusedContainerColor = Color.Gray.copy(.2girgf),
+                        focusedContainerColor = Color.Gray.copy(.2f),
                         unfocusedContainerColor = Color.Gray.copy(.1f)
 //                        focusedContainerColor = MaterialTheme.colorScheme.surface,
 //                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
