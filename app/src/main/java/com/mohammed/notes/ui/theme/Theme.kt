@@ -28,9 +28,9 @@ import androidx.compose.ui.graphics.Color
 private val DarkColorScheme = darkColorScheme(
     primary = Primary,
     onPrimary = Color.White,
-    secondary = Color.Black,
+    secondary = Color(0xff111111),
     onSecondary = Color(0xFFEEEDED),
-    surface = Color(0xFF000000),             // كروت الملاحظات
+    surface = Color(0xFF2D2D2D),             // كروت الملاحظات
     onSurface = Color.White,
     tertiary = Color(0x2AFFFFFF),
     onTertiary = Color(0x6BFFFFFF),

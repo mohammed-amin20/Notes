@@ -1,5 +1,3 @@
-@file:JvmName("ViewNotesScreenKt")
-
 package com.mohammed.notes.feature.note.presentation.view_notes_screen
 
 import androidx.compose.foundation.BorderStroke
@@ -58,7 +56,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.mohammed.notes.ui.theme.Primary
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -80,9 +77,9 @@ fun ViewNotesScreen(
 
     val state = viewModal.state.collectAsStateWithLifecycle()
     LaunchedEffect(true) {
-        viewModal.uiAction.collect { uiuAction ->
-            when (uiuAction) {
-                UiAction.GotoLogin -> {
+        viewModal.uiAction.collect { uiAction ->
+            when (uiAction) {
+                ViewNotesScreenViewModal.UiAction.GotoLogin -> {
                     goToLogin()
                 }
             }
@@ -100,7 +97,7 @@ fun ViewNotesScreen(
                         sharedViewModel.note = null
                         goToAddEditNote()
                     },
-                    containerColor = Primary,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 ) {
                     Icon(
@@ -127,9 +124,9 @@ fun ViewNotesScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Transparent,
                                 contentColor = MaterialTheme.colorScheme.onSecondary,
-                                disabledContentColor = MaterialTheme.colorScheme.onSecondary,
                                 disabledContainerColor = Color.Transparent
-                            )
+                            ),
+                            enabled = state.value.selectedItems.isNotEmpty()
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -144,13 +141,19 @@ fun ViewNotesScreen(
 
                         }
                         Button(
-                            onClick = {},
+                            onClick = {
+                                viewModal.apply {
+                                    onAction(ViewNotesScreenAction.OnPinClick)
+                                    onAction(ViewNotesScreenAction.OnSelectModeChange(false))
+                                    onAction(ViewNotesScreenAction.OnSelectedItemsChange(emptyList()))
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Transparent,
                                 contentColor = MaterialTheme.colorScheme.onSecondary,
-                                disabledContentColor = MaterialTheme.colorScheme.onSecondary,
                                 disabledContainerColor = Color.Transparent
-                            )
+                            ),
+                            enabled = state.value.selectedItems.isNotEmpty()
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -175,7 +178,6 @@ fun ViewNotesScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Transparent,
                                 contentColor = MaterialTheme.colorScheme.onSecondary,
-                                disabledContentColor = MaterialTheme.colorScheme.onSecondary,
                                 disabledContainerColor = Color.Transparent
                             )
                         ) {

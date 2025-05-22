@@ -4,5 +4,7 @@ data class AddEditNoteScreenState(
     val title : String = "",
     val text : String = "",
     val sizeOfText : Int = 0,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val pinned: Boolean = false,
+    val pinTimestamp: Long = Long.MIN_VALUE
 )

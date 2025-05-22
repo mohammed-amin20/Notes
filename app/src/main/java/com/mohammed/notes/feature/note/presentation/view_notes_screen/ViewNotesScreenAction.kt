@@ -10,4 +10,5 @@ sealed interface ViewNotesScreenAction {
     data class OnDeleteDialogVisibleChange(val visible: Boolean) :  ViewNotesScreenAction
     data object OnDeleteNotesConfirmed : ViewNotesScreenAction
     data object OnLogOut : ViewNotesScreenAction
+    data object OnPinClick : ViewNotesScreenAction
 }

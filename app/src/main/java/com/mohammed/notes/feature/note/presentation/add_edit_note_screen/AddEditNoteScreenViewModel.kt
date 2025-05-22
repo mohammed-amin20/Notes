@@ -26,6 +26,8 @@ class AddEditNoteScreenViewModel @Inject constructor(
     private val _uiAction = MutableSharedFlow<UiAction>()
     val uiAction = _uiAction.asSharedFlow()
 
+    private var inProgress = false
+
     fun onAction(action: AddEditNoteScreenAction) {
         when (action) {
             is AddEditNoteScreenAction.OnTitleChanged -> {
@@ -46,20 +48,25 @@ class AddEditNoteScreenViewModel @Inject constructor(
             }
 
             is AddEditNoteScreenAction.OnDoneClicked -> {
-                viewModelScope.launch {
-                    val title = _state.value.title
-                    val text = _state.value.text
-                    if (text.isNotBlank() or title.isNotBlank() ) {
-                        db.noteDao.upsertNote(
-                            Note(
-                                id = action.id,
-                                title = _state.value.title,
-                                text = _state.value.text,
-                                timestamp = System.currentTimeMillis(),
-                                userId = notesPrefs.getUserId()
+                if(!inProgress) {
+                    inProgress = true
+                    viewModelScope.launch {
+                        val title = _state.value.title
+                        val text = _state.value.text
+                        if (text.isNotBlank() or title.isNotBlank()) {
+                            db.noteDao.upsertNote(
+                                Note(
+                                    id = action.id,
+                                    title = _state.value.title,
+                                    text = _state.value.text,
+                                    timestamp = System.currentTimeMillis(),
+                                    userId = notesPrefs.getUserId(),
+                                    pinned = _state.value.pinned,
+                                    pinTimestamp = _state.value.pinTimestamp
+                                )
                             )
-                        )
-                        _uiAction.emit(UiAction.OnBackNavigation)
+                            _uiAction.emit(UiAction.OnBackNavigation)
+                        }
                     }
                 }
             }
@@ -68,6 +75,22 @@ class AddEditNoteScreenViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         timestamp = action.timestamp
+                    )
+                }
+            }
+
+            is AddEditNoteScreenAction.OnPinnedChanged -> {
+                _state.update {
+                    it.copy(
+                        pinned = action.pinned
+                    )
+                }
+            }
+
+            is AddEditNoteScreenAction.OnPinTimestampChanged -> {
+                _state.update {
+                    it.copy(
+                        pinTimestamp = action.timestamp
                     )
                 }
             }

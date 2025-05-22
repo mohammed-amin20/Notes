@@ -1,7 +1,5 @@
 package com.mohammed.notes.feature.note.presentation.view_notes_screen
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import  androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.NotesDB
@@ -17,11 +15,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ViewNotesScreenViewModal @Inject constructor(
-    val db : NotesDB,
-    val notesPrefs: NotesPrefs
-) : ViewModel(){
-//    private val _isAllSelected = mutableStateOf(false)
-//    val isAllSelected: MutableState<Boolean> = _isAllSelected
+    val db: NotesDB,
+    val notesPrefs: NotesPrefs,
+) : ViewModel() {
     private val _state = MutableStateFlow(ViewNotesScreenState())
     val state = _state.asStateFlow()
 
@@ -31,28 +27,37 @@ class ViewNotesScreenViewModal @Inject constructor(
     init {
         viewModelScope.launch {
             db.noteDao.getAllNotes(notesPrefs.getUserId()).collect { notes ->
-                _state.update { it.copy(
-                    notes = notes.reversed()
-                ) }
+                val pinnedNotes = notes.filter { it.pinned }.sortedBy { it.pinTimestamp }
+                val newNotes = notes.subtract(pinnedNotes).toList()
+                val finalNotes = newNotes + pinnedNotes
+                _state.update {
+                    it.copy(
+                        notes = finalNotes.reversed()
+                    )
+                }
             }
         }
     }
 
-    fun onAction(action: ViewNotesScreenAction){
-        when(action){
+    fun onAction(action: ViewNotesScreenAction) {
+        when (action) {
             is ViewNotesScreenAction.OnSearchChanged -> {
-                _state.update { it.copy(
-                    search = action.search,
-                    searchList = state.value.notes.filter {
-                        it.title.contains(action.search) || it.text.contains(action.search)
-                    }
-                ) }
+                _state.update {
+                    it.copy(
+                        search = action.search,
+                        searchList = state.value.notes.filter {
+                            it.title.contains(action.search) || it.text.contains(action.search)
+                        }
+                    )
+                }
             }
 
             is ViewNotesScreenAction.OnDropDownMenuExpandedChange -> {
-                _state.update { it.copy(
-                    dropDownMenuExpanded = action.expanded
-                ) }
+                _state.update {
+                    it.copy(
+                        dropDownMenuExpanded = action.expanded
+                    )
+                }
             }
 
             ViewNotesScreenAction.OnLogOut -> {
@@ -101,10 +106,30 @@ class ViewNotesScreenViewModal @Inject constructor(
                     }
                 }
             }
+
+            ViewNotesScreenAction.OnPinClick -> {
+                val pinnedItems = _state.value
+                    .selectedItems
+                    .filter { it.pinned }
+
+                val unpinnedItems = _state.value
+                    .selectedItems
+                    .filter { !it.pinned }
+
+                viewModelScope.launch {
+                    db.noteDao.apply {
+                        pinNotes(unpinnedItems.map { it.id!! })
+                        unpinnedItems.forEach {
+                            setPinTimestamp(it.id!!, System.currentTimeMillis())
+                        }
+                        unpinNotes(pinnedItems.map { it.id!! })
+                    }
+                }
+            }
         }
     }
-}
 
-sealed interface UiAction {
-    data object GotoLogin : UiAction
+    sealed interface UiAction {
+        data object GotoLogin : UiAction
+    }
 }

@@ -10,5 +10,7 @@ data class Note(
     val title: String,
     val timestamp: Long,
     val text : String,
-    val userId: Int
+    val userId: Int,
+    val pinned : Boolean = false,
+    val pinTimestamp: Long
 )

@@ -61,10 +61,14 @@ fun AddEditNoteScreen(
     }
 
     val note = sharedViewModel.note
-    if ( note != null){
-        viewModel.onAction(AddEditNoteScreenAction.OnTitleChanged(note.title))
-        viewModel.onAction(AddEditNoteScreenAction.OnTextChanged(note.text))
-        viewModel.onAction(AddEditNoteScreenAction.OnTimestampChanged(note.timestamp))
+    if (note != null){
+        viewModel.apply {
+            onAction(AddEditNoteScreenAction.OnTitleChanged(note.title))
+            onAction(AddEditNoteScreenAction.OnTextChanged(note.text))
+            onAction(AddEditNoteScreenAction.OnTimestampChanged(note.timestamp))
+            onAction(AddEditNoteScreenAction.OnPinnedChanged(note.pinned))
+            onAction(AddEditNoteScreenAction.OnPinTimestampChanged(note.pinTimestamp))
+        }
     }
 
     val textFocusRequester = FocusRequester()
