@@ -112,7 +112,6 @@ fun ViewNotesScreen(
                     )
                 }
             }
-
         },
         bottomBar = {
             if (state.value.selectMode) {
@@ -169,8 +168,9 @@ fun ViewNotesScreen(
                             ) {
                                 if(state.value.selectedItems.isEmpty()) {
                                     Icon(
-                                        painter = painterResource(R.drawable.pin_24),
-                                        contentDescription = "Pin"
+                                        painter = painterResource(R.drawable.pin),
+                                        contentDescription = "Pin",
+                                        modifier = Modifier.size(24.dp)
                                     )
                                     Text("Pin")
                                 } else if (state.value.selectedItems.all { it.pinned }) {

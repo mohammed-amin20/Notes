@@ -1,6 +1,5 @@
 package com.mohammed.notes.feature.note.presentation.view_notes_screen
 
-import android.util.Log
 import  androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.NotesDB
@@ -29,8 +28,8 @@ class ViewNotesScreenViewModal @Inject constructor(
         viewModelScope.launch {
             db.noteDao.getAllNotes(notesPrefs.getUserId()).collect { notes ->
                 val pinnedNotes = notes.filter { it.pinned }.sortedBy { it.pinTimestamp }
-                val newNotes = notes.subtract(pinnedNotes).toList()
-                val finalNotes = newNotes + pinnedNotes
+                val unpinnedNotes = notes.filter { !it.pinned }
+                val finalNotes = unpinnedNotes + pinnedNotes
                 _state.update {
                     it.copy(
                         notes = finalNotes.reversed()

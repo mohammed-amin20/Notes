@@ -85,16 +85,16 @@ fun NoteItem(
                 Text(
                     text = formatTimestamp(note.timestamp),
                     color = MaterialTheme.colorScheme.onTertiary,
-                    fontSize = 10.sp
+                    fontSize = 12.sp
                 )
                 if(note.pinned) {
                     Spacer(Modifier.width(8.dp))
                     Icon(
-                        painter = painterResource(R.drawable.pin_24),
+                        painter = painterResource(R.drawable.pin),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
-                            .size(20.dp)
+                            .size(16.dp)
                     )
                 }
             }
