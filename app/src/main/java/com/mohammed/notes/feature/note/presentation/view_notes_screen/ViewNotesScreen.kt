@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -52,6 +53,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +67,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohammed.notes.R
 import com.mohammed.notes.feature.note.presentation.SharedViewModel
 import com.mohammed.notes.feature.note.presentation.view_notes_screen.componentes.NoteItem
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +77,8 @@ fun ViewNotesScreen(
     viewModal: ViewNotesScreenViewModal = hiltViewModel(),
     sharedViewModel: SharedViewModel,
 ) {
+    val listState = rememberLazyStaggeredGridState()
+    val scope = rememberCoroutineScope()
 
     val state = viewModal.state.collectAsStateWithLifecycle()
     LaunchedEffect(true) {
@@ -146,6 +151,9 @@ fun ViewNotesScreen(
                                     onAction(ViewNotesScreenAction.OnPinClick)
                                     onAction(ViewNotesScreenAction.OnSelectModeChange(false))
                                     onAction(ViewNotesScreenAction.OnSelectedItemsChange(emptyList()))
+                                    scope.launch {
+                                        listState.animateScrollToItem(0)
+                                    }
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -159,11 +167,26 @@ fun ViewNotesScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.pin_24),
-                                    contentDescription = "Pin"
-                                )
-                                Text("Pin")
+                                if(state.value.selectedItems.isEmpty()) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.pin_24),
+                                        contentDescription = "Pin"
+                                    )
+                                    Text("Pin")
+                                } else if (state.value.selectedItems.all { it.pinned }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.unpin),
+                                        contentDescription = "unPin",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Text("Unpin")
+                                } else  {
+                                    Icon(
+                                        painter = painterResource(R.drawable.pin_24),
+                                        contentDescription = "Pin"
+                                    )
+                                    Text("Pin")
+                                }
                             }
                         }
                         Button(
@@ -207,7 +230,7 @@ fun ViewNotesScreen(
 
             @OptIn(ExperimentalMaterial3Api::class)
             val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            if(state.value.deleteDialogVisible) {
+            if (state.value.deleteDialogVisible) {
                 ModalBottomSheet(
                     onDismissRequest = {
                         viewModal.onAction(ViewNotesScreenAction.OnDeleteDialogVisibleChange(false))
@@ -386,11 +409,11 @@ fun ViewNotesScreen(
                     )
                     IconButton(
                         onClick = {
-                            if (state.value.selectedItems.size < state.value.notes.size){
+                            if (state.value.selectedItems.size < state.value.notes.size) {
                                 viewModal.onAction(
                                     ViewNotesScreenAction.OnSelectedItemsChange(state.value.notes)
                                 )
-                            }else{
+                            } else {
                                 viewModal.onAction(
                                     ViewNotesScreenAction.OnSelectedItemsChange(emptyList())
                                 )
@@ -476,7 +499,8 @@ fun ViewNotesScreen(
                     columns = StaggeredGridCells.Fixed(2),
                     modifier = Modifier.fillMaxWidth(),
                     verticalItemSpacing = 12.dp,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    state = listState
                 ) {
                     items(
                         if (state.value.searchList.isEmpty()) {

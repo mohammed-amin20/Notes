@@ -1,5 +1,6 @@
 package com.mohammed.notes.feature.note.presentation.view_notes_screen
 
+import android.util.Log
 import  androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.NotesDB
@@ -122,7 +123,9 @@ class ViewNotesScreenViewModal @Inject constructor(
                         unpinnedItems.forEach {
                             setPinTimestamp(it.id!!, System.currentTimeMillis())
                         }
-                        unpinNotes(pinnedItems.map { it.id!! })
+                        if(unpinnedItems.isEmpty()) {
+                            unpinNotes(pinnedItems.map { it.id!! })
+                        }
                     }
                 }
             }

@@ -11,26 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 
-
-//private val DarkColorScheme = darkColorScheme(
-//    primary = Color(0xFFFFC107),
-//    onPrimary = Color(0xFF000000),
-//    secondary = Color(0xFFBCAAA4),
-//    onSecondary = Color(0xFF000000),
-//    background = Color(0xFF121212),
-//    onBackground = Color(0xFFE0E0E0),
-//    surface = Color(0xFF1E1E1E),
-//    onSurface = Color(0xFFFFFFFF),
-//    error = Color(0xFFD32F2F),
-//    onError = Color(0xFFFFFFFF)
-//)
-
 private val DarkColorScheme = darkColorScheme(
     primary = Primary,
     onPrimary = Color.White,
     secondary = Color(0xff111111),
     onSecondary = Color(0xFFEEEDED),
-    surface = Color(0xFF2D2D2D),             // كروت الملاحظات
+    surface = Color(0xFF2D2D2D),
     onSurface = Color.White,
     tertiary = Color(0x2AFFFFFF),
     onTertiary = Color(0x6BFFFFFF),
@@ -43,7 +29,7 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = Color.White,
     secondary = Color(0xFFFAF7F1),
     onSecondary = Color(0xF8313131),
-    surface = Color(0xffffffff),             // كروت الملاحظات
+    surface = Color(0xffffffff),
     onSurface = Color(0xFF242424),
     tertiary = Color.White,
     onTertiary = Color(0x80000000),
