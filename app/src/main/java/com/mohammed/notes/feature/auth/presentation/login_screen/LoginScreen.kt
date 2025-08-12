@@ -38,7 +38,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohammed.notes.feature.core.presentation.components.CustomTextField
 import com.mohammed.notes.ui.theme.Primary
-import androidx.compose.ui.graphics.Color
 
 @Composable
 fun LoginScreen(
@@ -46,8 +45,8 @@ fun LoginScreen(
     goToHome: () -> Unit,
     viewModel: LoginScreenViewModel = hiltViewModel()
 ) {
-    val passwordFocusRequester = FocusRequester()
-    val keyboardController = LocalSoftwareKeyboardController.current
+    val passwordFocusRequester = FocusRequester() // next
+    val keyboardController = LocalSoftwareKeyboardController.current // done
 
     val context = LocalContext.current
 

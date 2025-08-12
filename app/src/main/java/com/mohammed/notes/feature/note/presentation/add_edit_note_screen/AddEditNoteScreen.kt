@@ -42,7 +42,6 @@ import com.mohammed.notes.feature.core.presentation.util.formatTimestamp
 import com.mohammed.notes.feature.note.presentation.SharedViewModel
 import com.mohammed.notes.feature.note.presentation.add_edit_note_screen.AddEditNoteScreenViewModel.UiAction
 
-
 @Composable
 fun AddEditNoteScreen(
     viewModel: AddEditNoteScreenViewModel = hiltViewModel(),

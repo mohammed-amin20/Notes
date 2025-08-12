@@ -94,7 +94,7 @@ fun ViewNotesScreen(
         contentWindowInsets = WindowInsets.safeDrawing,
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
-            if (!state.value.selectMode) {
+            if (!state.value.selectMode) { // Add new Note icon
                 FloatingActionButton(
                     modifier = Modifier.padding(end = 16.dp),
                     shape = CircleShape,
@@ -108,7 +108,7 @@ fun ViewNotesScreen(
                     Icon(
                         modifier = Modifier.size(40.dp),
                         imageVector = Icons.Default.Add,
-                        contentDescription = null
+                        contentDescription = "Add new notes"
                     )
                 }
             }
@@ -138,7 +138,8 @@ fun ViewNotesScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Lock,
-                                    contentDescription = "Hide"
+                                    contentDescription = "Hide",
+                                    modifier = Modifier.size(24.dp)
                                 )
                                 Text("Hide")
                             }
@@ -182,8 +183,9 @@ fun ViewNotesScreen(
                                     Text("Unpin")
                                 } else  {
                                     Icon(
-                                        painter = painterResource(R.drawable.pin_24),
-                                        contentDescription = "Pin"
+                                        painter = painterResource(R.drawable.pin),
+                                        contentDescription = "Pin",
+                                        modifier = Modifier.size(24.dp)
                                     )
                                     Text("Pin")
                                 }
@@ -193,9 +195,7 @@ fun ViewNotesScreen(
                             enabled = state.value.selectedItems.isNotEmpty(),
                             onClick = {
                                 viewModal.onAction(
-                                    ViewNotesScreenAction.OnDeleteDialogVisibleChange(
-                                        true
-                                    )
+                                    ViewNotesScreenAction.OnDeleteDialogVisibleChange(true)
                                 )
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -210,7 +210,8 @@ fun ViewNotesScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete"
+                                    contentDescription = "Delete",
+                                    modifier = Modifier.size(24.dp)
                                 )
                                 Text("Delete")
                             }
@@ -218,7 +219,6 @@ fun ViewNotesScreen(
                     }
                 }
             }
-
         }
     ) { innerPadding ->
         Column(
@@ -227,7 +227,6 @@ fun ViewNotesScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-
             @OptIn(ExperimentalMaterial3Api::class)
             val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
             if (state.value.deleteDialogVisible) {
@@ -260,17 +259,14 @@ fun ViewNotesScreen(
                             fontSize = 14.sp
                         )
                         Spacer(Modifier.height(24.dp))
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            OutlinedButton(
+                            OutlinedButton( // cancel deleting
                                 onClick = {
                                     viewModal.onAction(
-                                        ViewNotesScreenAction.OnDeleteDialogVisibleChange(
-                                            false
-                                        )
+                                        ViewNotesScreenAction.OnDeleteDialogVisibleChange(false)
                                     )
                                 },
                                 modifier = Modifier.weight(1f),
@@ -281,14 +277,11 @@ fun ViewNotesScreen(
                             ) {
                                 Text("Cancel")
                             }
-
-                            Button(
+                            Button( // delete note/s
                                 onClick = {
                                     viewModal.onAction(ViewNotesScreenAction.OnDeleteNotesConfirmed)
                                     viewModal.onAction(
-                                        ViewNotesScreenAction.OnDeleteDialogVisibleChange(
-                                            false
-                                        )
+                                        ViewNotesScreenAction.OnDeleteDialogVisibleChange(false)
                                     )
                                 },
                                 modifier = Modifier.weight(1f),
@@ -300,7 +293,6 @@ fun ViewNotesScreen(
                                 Text("Delete")
                             }
                         }
-
                         Spacer(Modifier.height(16.dp))
                     }
                 }
@@ -314,7 +306,6 @@ fun ViewNotesScreen(
                     Row {
                         IconButton(
                             onClick = {},
-
                             colors = IconButtonDefaults.iconButtonColors(
                                 contentColor = MaterialTheme.colorScheme.primary
                             )
@@ -435,7 +426,7 @@ fun ViewNotesScreen(
                     .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                TextField(
+                TextField(//search field
                     modifier = Modifier
                         .fillMaxWidth(),
                     value = state.value.search,
@@ -455,8 +446,6 @@ fun ViewNotesScreen(
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedContainerColor = Color.Gray.copy(.2f),
                         unfocusedContainerColor = Color.Gray.copy(.1f)
-//                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-//                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     leadingIcon = {
                         Icon(
@@ -478,7 +467,8 @@ fun ViewNotesScreen(
                             .background(color = MaterialTheme.colorScheme.surface)
                     ) {
                         Text(
-                            text = "All"
+                            text = "All",
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
