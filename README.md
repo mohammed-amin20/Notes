@@ -1,9 +1,15 @@
-# 📝 Notes App
+<p align="center">
+  <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" width="100"/>
+</p>
 
+<h1 align="center">📝 Notes App</h1>
+
+<p align="center">
 A simple and clean note-taking Android app that allows users to create, 
 manage, and organize their personal notes securely with user authentication.
-
-Built with **Kotlin** and **Jetpack Compose**.
+<br/>
+Built with <b>Kotlin</b> and <b>Jetpack Compose</b>.
+</p>
 
 ---
 
@@ -24,43 +30,43 @@ Built with **Kotlin** and **Jetpack Compose**.
 <table>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/sign.jpg" width="200"/>
+      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/sign.jpg" width="250"/>
       <br/><b>Sign Up</b>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/login.jpg" width="200"/>
+      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/login.jpg" width="250"/>
       <br/><b>Login</b>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/notes.jpg" width="200"/>
+      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/notes.jpg" width="250"/>
       <br/><b>Notes Screen</b>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/addNote.jpg" width="200"/>
+      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/addNote.jpg" width="250"/>
       <br/><b>Add Note</b>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/search.jpg" width="200"/>
+      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/search.jpg" width="250"/>
       <br/><b>Search</b>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/cheakbox.jpg" width="200"/>
+      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/cheakbox.jpg" width="250"/>
       <br/><b>Select & Manage</b>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/binNote.jpg" width="200"/>
+      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/binNote.jpg" width="250"/>
       <br/><b>Pin Note</b>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/unbinNote.jpg" width="200"/>
+      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/unbinNote.jpg" width="250"/>
       <br/><b>Unpin Note</b>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/logOut.jpg" width="200"/>
+      <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/logOut.jpg" width="250"/>
       <br/><b>Logout</b>
     </td>
   </tr>
