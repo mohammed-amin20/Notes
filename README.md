@@ -1,6 +1,7 @@
 # 📝 Notes App
 
-A simple and clean note-taking Android app that allows users to create, manage, and organize their notes easily.
+A simple and clean note-taking Android app that allows users to create, 
+manage, and organize their personal notes securely with user authentication.
 
 Built with **Kotlin** and **Jetpack Compose**.
 
@@ -9,10 +10,12 @@ Built with **Kotlin** and **Jetpack Compose**.
 ## ✨ Features
 
 - 🔐 User authentication (Sign Up & Login)
-- ➕ Add and delete notes
-- 🔍 Search through notes
+- ➕ Add and edit notes
+- 🔍 Search through notes instantly
 - 📌 Pin and unpin important notes
-- 🗑️ Hide and unhide notes
+- 🙈 Hide and unhide private notes
+- 🗑️ Delete notes
+- 🚪 Logout
 
 ---
 
@@ -44,7 +47,7 @@ Built with **Kotlin** and **Jetpack Compose**.
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/cheakbox.jpg" width="200"/>
-      <br/><b>Select Notes</b>
+      <br/><b>Select & Manage</b>
     </td>
   </tr>
   <tr>
@@ -54,7 +57,7 @@ Built with **Kotlin** and **Jetpack Compose**.
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/unbinNote.jpg" width="200"/>
-      <br/><b>UnPined Note</b>
+      <br/><b>Unpin Note</b>
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/mohammed-amin20/Notes/master/logOut.jpg" width="200"/>
@@ -67,6 +70,16 @@ Built with **Kotlin** and **Jetpack Compose**.
 
 ## 🛠️ Tech Stack
 
-- **Language:** Kotlin
-- **UI:** Jetpack Compose
-- **Authentication:** Firebase Auth
+| Technology | Usage |
+|------------|-------|
+| Kotlin | Programming Language |
+| Jetpack Compose | UI Framework |
+| Firebase Auth | User Authentication |
+| Firebase Firestore | Cloud Database |
+
+---
+
+## 👨‍💻 Developer
+
+Developed by **Mohammed Amin Ghazal**  
+🔗 [GitHub](https://github.com/mohammed-amin20)
