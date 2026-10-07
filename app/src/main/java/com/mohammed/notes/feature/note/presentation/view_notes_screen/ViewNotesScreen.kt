@@ -12,6 +12,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -37,6 +38,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -58,10 +61,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -82,6 +87,7 @@ import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.ReadableMeasure
 import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.Space
+import com.mohammed.notes.ui.theme.accent
 import com.mohammed.notes.ui.theme.listBottomClearance
 import com.mohammed.notes.ui.theme.staggeredAppear
 import kotlinx.coroutines.launch
@@ -157,6 +163,7 @@ fun ViewNotesContent(
 
     val visibleNotes = state.visibleNotes
     val emptyReason: EmptyReason? = when {
+        state.isLoading || state.loadFailed -> null
         visibleNotes.isNotEmpty() -> null
         state.notes.isEmpty() -> EmptyReason.NO_NOTES
         state.isSearching -> EmptyReason.NO_RESULTS
@@ -230,7 +237,7 @@ fun ViewNotesContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (!state.selectMode) {
+            if (!state.selectMode && !state.isLoading && !state.loadFailed) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -276,43 +283,54 @@ fun ViewNotesContent(
                     .padding(top = if (state.selectMode) Space.xl else Space.md),
                 contentAlignment = Alignment.TopCenter
             ) {
-                if (emptyReason != null) {
-                    NoteEmptyState(
+                when {
+                    state.isLoading -> NotesLoading(
+                        modifier = Modifier.widthIn(max = ReadableMeasure)
+                    )
+
+                    state.loadFailed -> NotesLoadError(
+                        onRetry = { onAction(ViewNotesScreenAction.OnRetryLoad) },
+                        modifier = Modifier.widthIn(max = ReadableMeasure)
+                    )
+
+                    emptyReason != null -> NoteEmptyState(
                         reason = emptyReason,
                         modifier = Modifier.widthIn(max = ReadableMeasure)
                     )
-                } else {
-                    val singleColumn = maxWidth < GridSingleColumnBelow ||
-                        fontScale >= GridSingleColumnFontScale
-                    LazyVerticalGrid(
-                        state = gridState,
-                        columns = GridCells.Fixed(if (singleColumn) 1 else 2),
-                        modifier = Modifier
-                            .widthIn(max = ReadableMeasure)
-                            .fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            start = Space.lg,
-                            end = Space.lg,
-                            top = Space.xs,
-                            bottom = listBottomClearance
-                        ),
-                        horizontalArrangement = Arrangement.spacedBy(Space.md),
-                        verticalArrangement = Arrangement.spacedBy(Space.md)
-                    ) {
-                        items(
-                            count = visibleNotes.size,
-                            key = { index -> visibleNotes[index].id ?: index }
-                        ) { index ->
-                            val note = visibleNotes[index]
-                            NoteCard(
-                                note = note,
-                                selected = note in state.selectedItems,
-                                selectMode = state.selectMode,
-                                onOpen = { onOpenNote(note) },
-                                onToggleSelect = { onToggleSelection(state, note, onAction) },
-                                onLongPress = { onLongPress(state, note, onAction) },
-                                modifier = noteModifier(note).staggeredAppear(index)
-                            )
+
+                    else -> {
+                        val singleColumn = maxWidth < GridSingleColumnBelow ||
+                            fontScale >= GridSingleColumnFontScale
+                        LazyVerticalGrid(
+                            state = gridState,
+                            columns = GridCells.Fixed(if (singleColumn) 1 else 2),
+                            modifier = Modifier
+                                .widthIn(max = ReadableMeasure)
+                                .fillMaxSize(),
+                            contentPadding = PaddingValues(
+                                start = Space.lg,
+                                end = Space.lg,
+                                top = Space.xs,
+                                bottom = listBottomClearance
+                            ),
+                            horizontalArrangement = Arrangement.spacedBy(Space.md),
+                            verticalArrangement = Arrangement.spacedBy(Space.md)
+                        ) {
+                            items(
+                                count = visibleNotes.size,
+                                key = { index -> visibleNotes[index].id ?: index }
+                            ) { index ->
+                                val note = visibleNotes[index]
+                                NoteCard(
+                                    note = note,
+                                    selected = note in state.selectedItems,
+                                    selectMode = state.selectMode,
+                                    onOpen = { onOpenNote(note) },
+                                    onToggleSelect = { onToggleSelection(state, note, onAction) },
+                                    onLongPress = { onLongPress(state, note, onAction) },
+                                    modifier = noteModifier(note).staggeredAppear(index)
+                                )
+                            }
                         }
                     }
                 }
@@ -393,9 +411,10 @@ private fun MemoTopBar(onSettings: () -> Unit) {
         }
         Spacer(Modifier.width(Space.sm))
         Image(
-            painter = painterResource(R.drawable.ic_note_brand),
+            painter = painterResource(R.drawable.memo_logo_foreground),
             contentDescription = null,
-            modifier = Modifier.size(Size.logoSize)
+            modifier = Modifier.size(Size.logoSize),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.accent)
         )
         Spacer(Modifier.weight(1f))
         IconButton(onClick = onSettings) {
@@ -471,6 +490,40 @@ private fun NotesHeading(count: Int, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1
         )
+    }
+}
+
+@Composable
+private fun NotesLoading(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+    }
+}
+
+@Composable
+private fun NotesLoadError(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = stringResource(R.string.error_notes_load_failed),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(Space.lg))
+            Button(onClick = onRetry) {
+                Text(stringResource(R.string.action_retry))
+            }
+        }
     }
 }
 
@@ -574,7 +627,7 @@ private fun previewNotes(): List<Note> {
 private fun ViewNotesLightPreview() {
     NotesTheme(darkTheme = false) {
         ViewNotesContent(
-            state = ViewNotesScreenState(notes = previewNotes()),
+            state = ViewNotesScreenState(notes = previewNotes(), isLoading = false),
             onAction = {},
             onOpenNote = {},
             onCreateNote = {},
@@ -588,7 +641,7 @@ private fun ViewNotesLightPreview() {
 private fun ViewNotesDarkPreview() {
     NotesTheme(darkTheme = true) {
         ViewNotesContent(
-            state = ViewNotesScreenState(notes = previewNotes().reversed()),
+            state = ViewNotesScreenState(notes = previewNotes().reversed(), isLoading = false),
             onAction = {},
             onOpenNote = {},
             onCreateNote = {},
@@ -604,7 +657,8 @@ private fun ViewNotesSearchNoResultsPreview() {
         ViewNotesContent(
             state = ViewNotesScreenState(
                 notes = previewNotes(),
-                search = "kubernetes"
+                search = "kubernetes",
+                isLoading = false
             ),
             onAction = {},
             onOpenNote = {},
@@ -619,7 +673,7 @@ private fun ViewNotesSearchNoResultsPreview() {
 private fun ViewNotesEmptyPreview() {
     NotesTheme(darkTheme = false) {
         ViewNotesContent(
-            state = ViewNotesScreenState(),
+            state = ViewNotesScreenState(isLoading = false),
             onAction = {},
             onOpenNote = {},
             onCreateNote = {},
@@ -635,7 +689,8 @@ private fun ViewNotesFilterNoMatchPreview() {
         ViewNotesContent(
             state = ViewNotesScreenState(
                 notes = previewNotes(),
-                filter = NoteFilter.PERSONAL
+                filter = NoteFilter.PERSONAL,
+                isLoading = false
             ),
             onAction = {},
             onOpenNote = {},
@@ -654,7 +709,8 @@ private fun ViewNotesSelectModePreview() {
             state = ViewNotesScreenState(
                 notes = notes,
                 selectMode = true,
-                selectedItems = notes.take(2)
+                selectedItems = notes.take(2),
+                isLoading = false
             ),
             onAction = {},
             onOpenNote = {},
@@ -672,7 +728,8 @@ private fun ViewNotesSearchingPreview() {
         ViewNotesContent(
             state = ViewNotesScreenState(
                 notes = notes,
-                search = "list"
+                search = "list",
+                isLoading = false
             ),
             onAction = {},
             onOpenNote = {},

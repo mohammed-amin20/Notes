@@ -53,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -78,6 +79,7 @@ import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.ThemeMode
 import com.mohammed.notes.ui.theme.Space
+import com.mohammed.notes.ui.theme.accent
 import com.mohammed.notes.ui.theme.rememberAnimationsEnabled
 
 @Composable
@@ -578,9 +580,10 @@ private fun ColumnScope.AboutSectionContent(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(R.drawable.ic_note_brand),
+            painter = painterResource(R.drawable.memo_logo_foreground),
             contentDescription = null,
-            modifier = Modifier.size(Size.logoSize)
+            modifier = Modifier.size(Size.logoSize),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.accent)
         )
         Spacer(Modifier.width(Space.md))
         Text(

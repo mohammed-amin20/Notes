@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -50,8 +51,10 @@ import com.mohammed.notes.R
 import com.mohammed.notes.feature.core.presentation.components.CustomTextField
 import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.FormMeasure
+import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.Space
+import com.mohammed.notes.ui.theme.accent
 
 @Composable
 fun LoginScreen(
@@ -129,9 +132,10 @@ fun LoginContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.ic_note_brand),
+                        painter = painterResource(R.drawable.memo_logo_foreground),
                         contentDescription = null,
-                        modifier = Modifier.size(72.dp)
+                        modifier = Modifier.size(72.dp),
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.accent)
                     )
                     Spacer(Modifier.height(Space.lg))
                     Text(

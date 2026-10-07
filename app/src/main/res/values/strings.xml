@@ -115,4 +115,7 @@
 
     <string name="error_all_fields_required">All fields are required</string>
     <string name="error_invalid_credentials">Incorrect username or password</string>
+    <string name="error_startup_failed">Memo couldn\'t start.</string>
+    <string name="error_notes_load_failed">Your notes couldn\'t be loaded.</string>
+    <string name="action_retry">Retry</string>
 </resources>

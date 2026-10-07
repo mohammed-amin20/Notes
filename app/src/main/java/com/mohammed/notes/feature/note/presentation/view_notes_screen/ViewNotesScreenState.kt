@@ -12,7 +12,14 @@ data class ViewNotesScreenState(
     val deleteDialogVisible: Boolean = false,
     val lastDeleted: List<Note> = emptyList(),
     /** Bumped on every delete so the undo snackbar re-shows even for identical counts. */
-    val lastDeleteId: Int = 0
+    val lastDeleteId: Int = 0,
+    /**
+     * The Room flow emits asynchronously after first frame; until the first emission a blank
+     * `notes` would render the false "No notes yet" state. These two fields keep the splash,
+     * loading and failure surfaces distinct from a genuinely empty list.
+     */
+    val isLoading: Boolean = true,
+    val loadFailed: Boolean = false
 ) {
     val isSearching: Boolean get() = search.isNotBlank()
 

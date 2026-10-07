@@ -10,6 +10,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -22,11 +25,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mohammed.notes.feature.auth.presentation.AuthNavHost
 import com.mohammed.notes.feature.core.data.data_source.local.shared_prefs.NotesPrefs
+import com.mohammed.notes.feature.core.presentation.startup.StartupScreen
 import com.mohammed.notes.feature.note.presentation.NoteNavHost
 import com.mohammed.notes.ui.locale.AppLocale
 import com.mohammed.notes.ui.locale.AppLocaleController
 import com.mohammed.notes.ui.locale.LocalAppLocaleController
 import com.mohammed.notes.ui.theme.LocalThemeModeController
+import com.mohammed.notes.ui.theme.Motion
 import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.ThemeMode
 import com.mohammed.notes.ui.theme.ThemeModeController
@@ -100,8 +105,24 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(
                         navController = navController,
-                        startDestination = Route.AuthNavHost
+                        startDestination = Route.Startup,
+                        enterTransition = { fadeIn(tween(Motion.enter)) },
+                        exitTransition = { fadeOut(tween(Motion.exit)) }
                     ) {
+                        composable<Route.Startup> {
+                            StartupScreen(
+                                onSignedOut = {
+                                    navController.navigate(Route.AuthNavHost) {
+                                        popUpTo(Route.Startup) { inclusive = true }
+                                    }
+                                },
+                                onAuthenticated = {
+                                    navController.navigate(Route.NoteNavHost) {
+                                        popUpTo(Route.Startup) { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
                         composable<Route.AuthNavHost> {
                             AuthNavHost(
                                 goToHome = {
@@ -149,6 +170,8 @@ class MainActivity : ComponentActivity() {
 }
 
 private sealed interface Route {
+    @Serializable
+    data object Startup : Route
     @Serializable
     data object AuthNavHost : Route
     @Serializable

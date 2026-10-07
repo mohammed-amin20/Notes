@@ -1,0 +1,1 @@
+<inset xmlns:android="http://schemas.android.com/apk/res/android" android:insetLeft="24%" android:insetTop="24%" android:insetRight="24%" android:insetBottom="24%"><bitmap android:src="@drawable/memo_logo_foreground" android:gravity="fill" android:filter="true" /></inset>

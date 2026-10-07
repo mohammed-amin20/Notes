@@ -5,12 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.NotesDB
 import com.mohammed.notes.feature.core.data.data_source.local.shared_prefs.NotesPrefs
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ViewNotesScreenViewModal @Inject constructor(
     private val db: NotesDB,
@@ -20,16 +24,39 @@ class ViewNotesScreenViewModal @Inject constructor(
     val state = _state.asStateFlow()
 
     /**
+     * Retry trigger. The Store keeps its no-replay semantics (a retry past the first has
+     * to re-read the DB anyway), so this is just a monotonic counter.
+     */
+    private val reload = MutableStateFlow(0)
+
+    /**
      * Pinned notes keep their historical position at the head of the list (newest first
      * within each group) — the pinned rail is gone, but pinning still reorders the grid, so
      * a pinned note does not vanish into the middle of a date run.
+     *
+     * The Room flow is collected under a `flatMapLatest`: each retry drops the previous
+     * subscription and reads a fresh flow. A raised error exposes the failure surface
+     * instead of the blink of a false "no notes yet".
      */
     init {
         viewModelScope.launch {
-            db.noteDao.getAllNotes(notesPrefs.getUserId()).collect { notes ->
+            reload.flatMapLatest {
+                // Flow.catch rethrows CancellationException on its own, so cancellation of
+                // the previous subscription (a new retry, or the screen leaving) is never
+                // mistaken for a load failure.
+                db.noteDao.getAllNotes(notesPrefs.getUserId()).catch {
+                    _state.update { it.copy(isLoading = false, loadFailed = true) }
+                }
+            }.collect { notes ->
                 val pinnedNotes = notes.filter { it.pinned }.sortedBy { it.pinTimestamp }
                 val unpinnedNotes = notes.filter { !it.pinned }
-                _state.update { it.copy(notes = (unpinnedNotes + pinnedNotes).reversed()) }
+                _state.update {
+                    it.copy(
+                        notes = (unpinnedNotes + pinnedNotes).reversed(),
+                        isLoading = false,
+                        loadFailed = false
+                    )
+                }
             }
         }
     }
@@ -102,6 +129,11 @@ class ViewNotesScreenViewModal @Inject constructor(
                         }
                     }
                 }
+            }
+
+            ViewNotesScreenAction.OnRetryLoad -> {
+                reload.value += 1
+                _state.update { it.copy(isLoading = true, loadFailed = false) }
             }
         }
     }

@@ -31,6 +31,9 @@ object Size {
     /** Feather mark beside the app title. */
     val logoSize = 40.dp
 
+    /** The cold-start splash feather. Big enough to read as the brand, not the app-bar mark. */
+    val splashLogo = 132.dp
+
     /**
      * A grid card is a fixed height so every card in a row has the same surface — the grid
      * top-aligns unequal children instead of stretching them. Scales with the system font so
