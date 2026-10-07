@@ -1,4 +1,148 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">مذكرات</string>
+    <string name="app_name">ميمو</string>
+
+    <!-- Notes list -->
+    <string name="notes_title">ميمو</string>
+    <string name="notes_subtitle">مساحة لأفكارك</string>
+    <string name="notes_heading">ملاحظاتك</string>
+    <string name="action_new_note">ملاحظة جديدة</string>
+    <string name="action_search_notes">ابحث في ملاحظاتك</string>
+    <string name="action_clear_search">مسح البحث</string>
+    <string name="action_log_out">تسجيل الخروج</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_pin">تثبيت</string>
+    <string name="action_unpin">إلغاء التثبيت</string>
+    <string name="action_select_all">تحديد الكل</string>
+    <string name="action_clear_selection">إلغاء التحديد</string>
+    <string name="action_back">رجوع</string>
+    <string name="action_save">حفظ</string>
+    <string name="action_settings">الإعدادات</string>
+    <plurals name="characters_count">
+        <item quantity="zero">%d حرف</item>
+        <item quantity="one">حرف واحد</item>
+        <item quantity="two">حرفان</item>
+        <item quantity="few">%d أحرف</item>
+        <item quantity="many">%d حرفًا</item>
+        <item quantity="other">%d حرف</item>
+    </plurals>
+    <string name="action_discard">تجاهل</string>
+    <string name="action_keep_editing">متابعة التحرير</string>
+    <string name="action_undo">تراجع</string>
+    <string name="action_close">إغلاق</string>
+
+    <!-- List filters -->
+    <string name="filter_all">الكل</string>
+    <string name="filter_pinned">المثبتة</string>
+    <string name="filter_work">العمل</string>
+    <string name="filter_personal">شخصي</string>
+
+    <!--
+        Arabic requires the full zero/one/two/few/many/other set; two-item translations
+        here were the source of the six MissingQuantity lint errors.
+    -->
+    <plurals name="notes_count">
+        <item quantity="zero">لا توجد ملاحظات</item>
+        <item quantity="one">ملاحظة واحدة</item>
+        <item quantity="two">ملاحظتان</item>
+        <item quantity="few">%d ملاحظات</item>
+        <item quantity="many">%d ملاحظة</item>
+        <item quantity="other">%d ملاحظة</item>
+    </plurals>
+    <plurals name="search_results">
+        <item quantity="zero">لا توجد نتائج</item>
+        <item quantity="one">نتيجة واحدة</item>
+        <item quantity="two">نتيجتان</item>
+        <item quantity="few">%d نتائج</item>
+        <item quantity="many">%d نتيجة</item>
+        <item quantity="other">%d نتيجة</item>
+    </plurals>
+    <plurals name="selected_count">
+        <item quantity="zero">لم يتم تحديد أي عنصر</item>
+        <item quantity="one">تم تحديد عنصر واحد</item>
+        <item quantity="two">تم تحديد عنصرين</item>
+        <item quantity="few">تم تحديد %d عناصر</item>
+        <item quantity="many">تم تحديد %d عنصراً</item>
+        <item quantity="other">تم تحديد %d</item>
+    </plurals>
+    <plurals name="word_count">
+        <item quantity="zero">لا توجد كلمات</item>
+        <item quantity="one">كلمة واحدة</item>
+        <item quantity="two">كلمتان</item>
+        <item quantity="few">%d كلمات</item>
+        <item quantity="many">%d كلمة</item>
+        <item quantity="other">%d كلمة</item>
+    </plurals>
+    <plurals name="delete_dialog_title">
+        <item quantity="zero">لا توجد ملاحظات للحذف</item>
+        <item quantity="one">حذف هذه الملاحظة؟</item>
+        <item quantity="two">حذف الملاحظتين؟</item>
+        <item quantity="few">حذف %d ملاحظات؟</item>
+        <item quantity="many">حذف %d ملاحظة؟</item>
+        <item quantity="other">حذف %d ملاحظة؟</item>
+    </plurals>
+    <plurals name="notes_deleted">
+        <item quantity="zero">لم يتم حذف أي ملاحظة</item>
+        <item quantity="one">تم حذف ملاحظة واحدة</item>
+        <item quantity="two">تم حذف ملاحظتين</item>
+        <item quantity="few">تم حذف %d ملاحظات</item>
+        <item quantity="many">تم حذف %d ملاحظة</item>
+        <item quantity="other">تم حذف %d ملاحظة</item>
+    </plurals>
+
+    <string name="delete_dialog_body">يمكنك التراجع عن ذلك لبضع ثوانٍ.</string>
+
+    <string name="empty_no_notes_title">لا توجد ملاحظات</string>
+    <string name="empty_no_notes_body">اضغط على «ملاحظة جديدة» لكتابة أول ملاحظة.</string>
+    <string name="empty_no_results_title">لا توجد نتائج</string>
+    <string name="empty_no_results_body">جرّب كلمة أخرى.</string>
+    <string name="empty_filter_title">لا يوجد شيء هنا</string>
+    <string name="empty_filter_body">غيّر التصنيف أو أضف ملاحظة.</string>
+
+    <string name="cd_note_pinned">مثبّتة</string>
+    <string name="cd_open_note">فتح الملاحظة</string>
+    <string name="note_untitled">بدون عنوان</string>
+
+    <!-- Editor -->
+    <string name="editor_new_note">ملاحظة جديدة</string>
+    <string name="editor_edit_note">تعديل الملاحظة</string>
+    <string name="editor_title_hint">العنوان</string>
+    <string name="editor_body_hint">ابدأ الكتابة</string>
+    <string name="editor_category">التصنيف</string>
+    <string name="category_none">بدون تصنيف</string>
+    <string name="editor_edited_at">آخر تعديل %1$s</string>
+    <string name="editor_discard_title">تجاهل التغييرات؟</string>
+    <string name="editor_discard_body">لم يتم حفظ تغييراتك على هذه الملاحظة.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_appearance">المظهر</string>
+    <string name="settings_theme_light">فاتح</string>
+    <string name="settings_theme_dark">داكن</string>
+    <string name="settings_theme_system">حسب النظام</string>
+    <string name="settings_language">اللغة</string>
+    <string name="settings_account">الحساب</string>
+    <string name="settings_about">حول</string>
+    <string name="settings_version">الإصدار %1$s</string>
+    <string name="logout_dialog_title">تسجيل الخروج؟</string>
+    <string name="logout_dialog_body">يمكنك تسجيل الدخول في أي وقت.</string>
+
+    <!-- Auth -->
+    <string name="auth_login_title">أهلاً بعودتك</string>
+    <string name="auth_login_subtitle">سجّل الدخول لفتح مذكراتك.</string>
+    <string name="auth_signup_title">أنشئ حساباً</string>
+    <string name="auth_signup_subtitle">ابدأ الكتابة في أقل من دقيقة.</string>
+    <string name="auth_username">اسم المستخدم</string>
+    <string name="auth_email">البريد الإلكتروني</string>
+    <string name="auth_password">كلمة المرور</string>
+    <string name="auth_login_action">تسجيل الدخول</string>
+    <string name="auth_signup_action">إنشاء حساب</string>
+    <string name="auth_no_account">ليس لديك حساب؟</string>
+    <string name="auth_have_account">لديك حساب بالفعل؟</string>
+    <string name="auth_show_password">إظهار كلمة المرور</string>
+    <string name="auth_hide_password">إخفاء كلمة المرور</string>
+
+    <string name="error_all_fields_required">جميع الحقول مطلوبة</string>
+    <string name="error_invalid_credentials">اسم المستخدم أو كلمة المرور غير صحيحة</string>
 </resources>

@@ -1,7 +1,9 @@
-package com.mohammed.notes.feature.auth.presentation.login_screen
+﻿package com.mohammed.notes.feature.auth.presentation.login_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.annotation.StringRes
+import com.mohammed.notes.R
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.NotesDB
 import com.mohammed.notes.feature.core.data.data_source.local.shared_prefs.NotesPrefs
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,14 +63,14 @@ class LoginScreenViewModel @Inject constructor(
                         val user = db.userDao
                             .getUser(username, password)
                         if (user == null) {
-                            _uiAction.emit(UiAction.ShowToast("Error in username or password"))
+                            _uiAction.emit(UiAction.ShowToast(R.string.error_invalid_credentials))
                         } else {
                             prefs.setUserId(user.id!!)
                             prefs.setLoggedIn(true)
                             _uiAction.emit(UiAction.NavigateToHome)
                         }
                     } else {
-                        _uiAction.emit(UiAction.ShowToast("Error in username or password"))
+                        _uiAction.emit(UiAction.ShowToast(R.string.error_all_fields_required))
                     }
                 }
             }
@@ -76,7 +78,7 @@ class LoginScreenViewModel @Inject constructor(
     }
 
     sealed interface UiAction {
-        data class ShowToast(val message: String) : UiAction
+        data class ShowToast(@StringRes val messageRes: Int) : UiAction
         data object NavigateToHome : UiAction
     }
 }

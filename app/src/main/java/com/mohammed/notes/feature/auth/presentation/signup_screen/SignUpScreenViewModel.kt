@@ -1,7 +1,9 @@
-package com.mohammed.notes.feature.auth.presentation.signup_screen
+﻿package com.mohammed.notes.feature.auth.presentation.signup_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.annotation.StringRes
+import com.mohammed.notes.R
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.NotesDB
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.entity.User
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -66,7 +68,7 @@ class SignUpScreenViewModel @Inject constructor(
                         )
                         _uiAction.emit(UiAction.GoToLoginScreen)
                     } else {
-                        _uiAction.emit(UiAction.OnToastMessage(message = "All Fields Required"))
+                        _uiAction.emit(UiAction.OnToastMessage(R.string.error_all_fields_required))
                     }
                 }
             }
@@ -74,7 +76,7 @@ class SignUpScreenViewModel @Inject constructor(
     }
 
     sealed interface UiAction {
-        data class OnToastMessage(val message: String) : UiAction
+        data class OnToastMessage(@StringRes val messageRes: Int) : UiAction
         data object GoToLoginScreen : UiAction
     }
 }

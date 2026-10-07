@@ -4,11 +4,11 @@ import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.entity
 
 sealed interface ViewNotesScreenAction {
     data class OnSearchChanged(val search: String) : ViewNotesScreenAction
-    data class OnDropDownMenuExpandedChange(val expanded: Boolean) : ViewNotesScreenAction
+    data class OnFilterChanged(val filter: NoteFilter) : ViewNotesScreenAction
     data class OnSelectModeChange(val selectMode: Boolean) : ViewNotesScreenAction
     data class OnSelectedItemsChange(val selectedItems: List<Note>) : ViewNotesScreenAction
-    data class OnDeleteDialogVisibleChange(val visible: Boolean) :  ViewNotesScreenAction
+    data class OnDeleteDialogVisibleChange(val visible: Boolean) : ViewNotesScreenAction
     data object OnDeleteNotesConfirmed : ViewNotesScreenAction
-    data object OnLogOut : ViewNotesScreenAction
+    data object OnUndoDelete : ViewNotesScreenAction
     data object OnPinClick : ViewNotesScreenAction
 }

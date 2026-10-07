@@ -1,6 +1,13 @@
 package com.mohammed.notes.feature.note.presentation.add_edit_note_screen
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,201 +15,401 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.TextSelectionColors
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.unit.dp
-import com.mohammed.notes.ui.theme.Primary
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mohammed.notes.feature.core.presentation.util.formatTimestamp
+import com.mohammed.notes.R
+import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.entity.NoteCategory
+import com.mohammed.notes.feature.core.presentation.util.formatDateTime
 import com.mohammed.notes.feature.note.presentation.SharedViewModel
 import com.mohammed.notes.feature.note.presentation.add_edit_note_screen.AddEditNoteScreenViewModel.UiAction
+import com.mohammed.notes.ui.theme.Motion
+import com.mohammed.notes.ui.theme.ReadableMeasure
+import com.mohammed.notes.ui.theme.Size
+import com.mohammed.notes.ui.theme.Space
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun AddEditNoteScreen(
-    viewModel: AddEditNoteScreenViewModel = hiltViewModel(),
     goToHome: () -> Unit,
-    sharedViewModel: SharedViewModel
+    sharedViewModel: SharedViewModel,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    viewModel: AddEditNoteScreenViewModel = hiltViewModel()
 ) {
-    val state = viewModel.state.collectAsStateWithLifecycle()
-    LaunchedEffect(true) {
-        viewModel.uiAction.collect {
-            when (it) {
-                UiAction.OnBackNavigation -> {
-                    goToHome()
-                }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
+
+    val bodyFocusRequester = remember { FocusRequester() }
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.onAction(AddEditNoteScreenAction.OnNoteLoaded(sharedViewModel.note))
+        viewModel.uiAction.collect { uiAction ->
+            when (uiAction) {
+                UiAction.OnBackNavigation -> goToHome()
+                UiAction.AskDiscardConfirmation -> showDiscardDialog = true
             }
         }
     }
 
-    val note = sharedViewModel.note
-    if (note != null){
-        viewModel.apply {
-            onAction(AddEditNoteScreenAction.OnTitleChanged(note.title))
-            onAction(AddEditNoteScreenAction.OnTextChanged(note.text))
-            onAction(AddEditNoteScreenAction.OnTimestampChanged(note.timestamp))
-            onAction(AddEditNoteScreenAction.OnPinnedChanged(note.pinned))
-            onAction(AddEditNoteScreenAction.OnPinTimestampChanged(note.pinTimestamp))
+    LaunchedEffect(state.hydrated, state.isNewNote) {
+        if (state.hydrated && state.isNewNote) {
+            bodyFocusRequester.requestFocus()
         }
     }
 
-    val textFocusRequester = FocusRequester()
+    BackHandler {
+        viewModel.onAction(AddEditNoteScreenAction.OnBackClicked)
+    }
+
+    val sharedKey = if (state.hydrated && !state.isNewNote && state.noteId != null) {
+        "note-${state.noteId}"
+    } else {
+        "note-new"
+    }
+    val sharedModifier = with(sharedTransitionScope) {
+        Modifier.sharedBounds(
+            sharedContentState = rememberSharedContentState(key = sharedKey),
+            animatedVisibilityScope = animatedVisibilityScope,
+            boundsTransform = { _, _ -> tween(Motion.sharedBounds) }
+        )
+    }
+
     Scaffold(
-        contentWindowInsets = WindowInsets.safeDrawing,
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                IconButton(
-                    onClick = {
-                        goToHome()
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(
+                            if (state.isNewNote) R.string.editor_new_note else R.string.editor_edit_note
+                        ),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-                if (state.value.text.isNotBlank() or state.value.title.isNotBlank())
-                    IconButton(
-                        onClick = {
-                            viewModel.onAction(
-                                AddEditNoteScreenAction.OnDoneClicked(note?.id)
-                            )
-                        },
-                    ) {
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        viewModel.onAction(AddEditNoteScreenAction.OnBackClicked)
+                    }) {
                         Icon(
-                            imageVector = Icons.Default.Done,
-                            contentDescription = "Done"
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back),
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-            }
-            Spacer(Modifier.height(8.dp))
+                },
+                actions = {
+                    IconButton(onClick = {
+                        viewModel.onAction(AddEditNoteScreenAction.OnPinToggled)
+                    }) {
+                        Icon(
+                            painter = painterResource(
+                                if (state.pinned) R.drawable.ic_pin_24 else R.drawable.ic_pin_outline_24
+                            ),
+                            contentDescription = stringResource(
+                                if (state.pinned) R.string.action_unpin else R.string.action_pin
+                            ),
+                            tint = if (state.pinned) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
+                    if (state.hasContent) {
+                        IconButton(onClick = {
+                            viewModel.onAction(AddEditNoteScreenAction.OnSaveClicked)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Done,
+                                contentDescription = stringResource(R.string.action_save),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter
+        ) {
             Column(
                 modifier = Modifier
+                    .widthIn(max = ReadableMeasure)
                     .fillMaxWidth()
-                    .weight(1f),
-
-                ) {
+                    .verticalScroll(rememberScrollState())
+                    .then(sharedModifier)
+            ) {
                 TextField(
-                    value = state.value.title,
+                    value = state.title,
                     onValueChange = {
                         viewModel.onAction(AddEditNoteScreenAction.OnTitleChanged(it))
                     },
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        cursorColor = Primary,
-                        selectionColors = TextSelectionColors(
-                            handleColor = Primary,
-                            backgroundColor = Primary.copy(0.4f)
-                        ),
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
+                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    textStyle = MaterialTheme.typography.headlineSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
                     placeholder = {
                         Text(
-                            text = "Title",
-                            color = Color.Gray.copy(.5f),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp
+                            text = stringResource(R.string.editor_title_hint),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     },
-                    textStyle = TextStyle(
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
+                    colors = editorFieldColors(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
+                        capitalization = KeyboardCapitalization.Sentences,
                         imeAction = ImeAction.Next
                     ),
                     keyboardActions = KeyboardActions(
-                        onNext = {
-                            textFocusRequester.requestFocus()
-                        }
+                        onNext = { bodyFocusRequester.requestFocus() }
                     )
                 )
+
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Space.xs, vertical = Space.sm),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (!state.isNewNote) {
+                        Text(
+                            text = stringResource(
+                                R.string.editor_edited_at,
+                                formatDateTime(context, state.timestamp)
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        Spacer(Modifier.weight(1f))
+                    }
                     Text(
-                        text = formatTimestamp(state.value.timestamp),
-                        color = Color.Gray,
-                        fontSize = 12.sp
+                        text = pluralStringResource(
+                            R.plurals.word_count,
+                            state.wordCount,
+                            state.wordCount
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "  |  ${state.value.text.length} characters",
-                        color = Color.Gray,
-                        fontSize = 12.sp
+                        text = "  ·  " + pluralStringResource(
+                            R.plurals.characters_count,
+                            state.charCount,
+                            state.charCount
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                CategoryRow(
+                    category = state.category,
+                    onCategoryChange = {
+                        viewModel.onAction(AddEditNoteScreenAction.OnCategoryChanged(it))
+                    }
+                )
+
                 TextField(
-                    value = state.value.text,
+                    value = state.text,
                     onValueChange = {
                         viewModel.onAction(AddEditNoteScreenAction.OnTextChanged(it))
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f)
-                        .focusRequester(textFocusRequester),
-                    colors = TextFieldDefaults.colors(
-                        cursorColor = Primary,
-                        selectionColors = TextSelectionColors(
-                            handleColor = Primary,
-                            backgroundColor = Primary.copy(0.4f)
-                        ),
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
+                        .heightIn(min = 240.dp)
+                        .focusRequester(bodyFocusRequester),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.35f
                     ),
                     placeholder = {
                         Text(
-                            text = "Start Typing",
-                            color = Color.Gray.copy(.2f),
-                            fontSize = 16.sp
+                            text = stringResource(R.string.editor_body_hint),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
-                    textStyle = TextStyle(
-                        fontSize = 16.sp,
+                    colors = editorFieldColors(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Default
                     )
                 )
             }
         }
     }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text(stringResource(R.string.editor_discard_title)) },
+            text = { Text(stringResource(R.string.editor_discard_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDiscardDialog = false
+                    viewModel.onAction(AddEditNoteScreenAction.OnDiscardConfirmed)
+                }) {
+                    Text(
+                        text = stringResource(R.string.action_discard),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) {
+                    Text(stringResource(R.string.action_keep_editing))
+                }
+            },
+            shape = MaterialTheme.shapes.extraLarge,
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
 }
+
+@Composable
+private fun CategoryRow(
+    category: String?,
+    onCategoryChange: (String?) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = Space.lg, vertical = Space.sm),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.editor_category),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1
+        )
+        listOf<Pair<String?, String>>(
+            null to stringResource(R.string.category_none),
+            NoteCategory.WORK.key to stringResource(R.string.filter_work),
+            NoteCategory.PERSONAL.key to stringResource(R.string.filter_personal)
+        ).forEach { (key, label) ->
+            Spacer(Modifier.width(Space.sm))
+            CategoryChip(
+                label = label,
+                selected = category == key,
+                onSelect = { onCategoryChange(key) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoryChip(
+    label: String,
+    selected: Boolean,
+    onSelect: () -> Unit
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onSelect,
+        label = {
+            Text(
+                text = label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        modifier = Modifier.height(Size.filterChipHeight),
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ),
+        border = BorderStroke(
+            width = Size.hairline,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            }
+        )
+    )
+}
+
+@Composable
+private fun editorFieldColors() = TextFieldDefaults.colors(
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
+    focusedIndicatorColor = Color.Transparent,
+    unfocusedIndicatorColor = Color.Transparent,
+    cursorColor = MaterialTheme.colorScheme.primary,
+selectionColors = TextSelectionColors(
+            handleColor = MaterialTheme.colorScheme.primary,
+            backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+        )
+)

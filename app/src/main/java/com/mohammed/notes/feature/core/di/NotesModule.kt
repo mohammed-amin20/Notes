@@ -21,6 +21,7 @@ object NotesModule {
             NotesDB::class.java,
             NotesDB.DB_NAME
         )
+            .addMigrations(NotesDB.MIGRATION_1_2)
 //            .fallbackToDestructiveMigration(true)
             .build()
     }
