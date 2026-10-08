@@ -17,6 +17,7 @@ sealed interface AddEditNoteScreenAction {
     data object OnPinToggled : AddEditNoteScreenAction
     data object OnSaveClicked : AddEditNoteScreenAction
     data object OnHideClicked : AddEditNoteScreenAction
+    data object OnUnhideClicked : AddEditNoteScreenAction
     data object OnBackClicked : AddEditNoteScreenAction
     data object OnDiscardConfirmed : AddEditNoteScreenAction
 }

@@ -18,6 +18,11 @@ data class AddEditNoteScreenState(
     val loadedText: String = "",
     val loadedCategory: String? = null,
     /**
+     * The note being edited lives in the vault: it was decrypted on load and must be
+     * re-encrypted on save, so a save can never silently move it into the visible list.
+     */
+    val hidden: Boolean = false,
+    /**
      * Hide was pressed before a vault existed; the editor sends the user to the setup
      * gate and finishes the hide on their return instead of dropping the edit.
      */

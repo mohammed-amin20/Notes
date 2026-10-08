@@ -31,17 +31,22 @@ class PinVerifyViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     fun verify(pin: String) {
-        if (_state.value.lockedRemainingMs > 0L) return
+        if (_state.value.lockedRemainingMs > 0L || _state.value.verifying) return
         _state.update { it.copy(hasError = false) }
         viewModelScope.launch {
-            when (val res = store.verifyPin(notesPrefs.getUserId(), pin)) {
-                PinVerifyResult.Success -> _state.update {
-                    it.copy(verified = true, hasError = false, lockedRemainingMs = 0L)
+            try {
+                _state.update { it.copy(verifying = true) }
+                when (val res = store.verifyPin(notesPrefs.getUserId(), pin)) {
+                    PinVerifyResult.Success -> _state.update {
+                        it.copy(verified = true, hasError = false, lockedRemainingMs = 0L)
+                    }
+
+                    PinVerifyResult.Wrong -> _state.update { it.copy(hasError = true) }
+
+                    is PinVerifyResult.Locked -> startCooldown(res.remainingMillis)
                 }
-
-                PinVerifyResult.Wrong -> _state.update { it.copy(hasError = true) }
-
-                is PinVerifyResult.Locked -> startCooldown(res.remainingMillis)
+            } finally {
+                _state.update { it.copy(verifying = false) }
             }
         }
     }
@@ -82,7 +87,9 @@ class PinVerifyViewModel @Inject constructor(
         val verified: Boolean = false,
         val hasError: Boolean = false,
         val lockedRemainingMs: Long = 0L,
-        val reset: Boolean = false
+        val reset: Boolean = false,
+        /** PBKDF2 verification can take a beat; the screen shows progress while it runs. */
+        val verifying: Boolean = false
     ) {
         val locked: Boolean get() = lockedRemainingMs > 0L
     }

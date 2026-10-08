@@ -86,7 +86,15 @@ fun NoteNavHost(
                 )
             }
             composable<HiddenNotes> {
-                HiddenNotesRoute(onBack = { navController.navigateUp() })
+                HiddenNotesRoute(
+                    onBack = { navController.navigateUp() },
+                    onOpenNote = { note ->
+                        sharedViewModel.note = note
+                        navController.navigate(Route.AddEditNoteScreen)
+                    },
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = this
+                )
             }
             composable<ChangePin> {
                 ChangePinRoute(

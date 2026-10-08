@@ -17,6 +17,11 @@ data class ViewNotesScreenState(
     val lastHiddenId: Int = 0,
     val lastHiddenCount: Int = 0,
     /**
+     * True when the hide was parked through the first-time PIN setup, so the confirmation
+     * snackbar earns its second line pointing at Settings → Hidden notes.
+     */
+    val lastHiddenViaSetup: Boolean = false,
+    /**
      * The user tapped Hide before a PIN existed and was sent to the setup gate. The
      * selection is kept so the hide completes automatically on return instead of asking
      * them to re-pick everything.

@@ -237,8 +237,9 @@ fun NoteCard(
  * mid-scroll land on their final value because `animate*AsState` seeds from the first
  * target it sees rather than replaying an entrance.
  */
+/** Shared with the hidden list's card so both lists animate selection identically. */
 @Composable
-private fun SelectionIndicator(visible: Boolean, selected: Boolean) {
+internal fun SelectionIndicator(visible: Boolean, selected: Boolean) {
     val animationsOn = rememberAnimationsEnabled()
 
     val appear by animateFloatAsState(

@@ -172,13 +172,13 @@ class ViewNotesScreenViewModal @Inject constructor(
     fun onReturnedFromGate() {
         if (!_state.value.hidePending) return
         if (store.hasPin(notesPrefs.getUserId())) {
-            encryptAndHide(_state.value.selectedItems)
+            encryptAndHide(_state.value.selectedItems, viaSetup = true)
         } else {
             _state.update { it.copy(hidePending = false, selectMode = false, selectedItems = emptyList()) }
         }
     }
 
-    private fun encryptAndHide(targets: List<Note>) {
+    private fun encryptAndHide(targets: List<Note>, viaSetup: Boolean = false) {
         viewModelScope.launch {
             val userId = notesPrefs.getUserId()
             targets.forEach { note ->
@@ -200,7 +200,8 @@ class ViewNotesScreenViewModal @Inject constructor(
                     selectedItems = emptyList(),
                     hidePending = false,
                     lastHiddenCount = targets.size,
-                    lastHiddenId = it.lastHiddenId + 1
+                    lastHiddenId = it.lastHiddenId + 1,
+                    lastHiddenViaSetup = viaSetup
                 )
             }
         }

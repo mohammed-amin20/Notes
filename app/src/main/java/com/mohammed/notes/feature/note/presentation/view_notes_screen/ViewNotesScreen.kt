@@ -188,6 +188,9 @@ fun ViewNotesContent(
 
     val hiddenCount = state.lastHiddenCount
     val hiddenMessage = pluralStringResource(R.plurals.notes_hidden, hiddenCount, hiddenCount)
+    val hiddenHint = stringResource(R.string.hidden_settings_hint)
+    val hideSnackbarMessage =
+        if (state.lastHiddenViaSetup) "$hiddenMessage\n$hiddenHint" else hiddenMessage
 
     LaunchedEffect(state.lastDeleteId) {
         if (deletedCount == 0) return@LaunchedEffect
@@ -204,8 +207,8 @@ fun ViewNotesContent(
     LaunchedEffect(state.lastHiddenId) {
         if (hiddenCount == 0) return@LaunchedEffect
         snackbarHostState.showSnackbar(
-            message = hiddenMessage,
-            duration = SnackbarDuration.Short
+            message = hideSnackbarMessage,
+            duration = if (state.lastHiddenViaSetup) SnackbarDuration.Long else SnackbarDuration.Short
         )
     }
 

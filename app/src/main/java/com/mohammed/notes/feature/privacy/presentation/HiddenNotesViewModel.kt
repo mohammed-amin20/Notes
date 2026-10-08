@@ -35,6 +35,9 @@ class HiddenNotesViewModel @Inject constructor(
     private val _state = MutableStateFlow(HiddenState())
     val state = _state.asStateFlow()
 
+    /** True once the vault's rows are decryptable this session, so later refreshes skip the spinner. */
+    private var loaded = false
+
     private val userId: Int get() = notesPrefs.getUserId()
 
     init {
@@ -52,8 +55,20 @@ class HiddenNotesViewModel @Inject constructor(
                 _state.map { it.gate }.distinctUntilChanged()
             ) { notes, gate -> notes to gate }
                 .collect { (notes, gate) ->
+                    // Unlocking the vault decrypts every row in one go; until that first
+                    // pass lands, the screen shows a spinner instead of a false "empty".
+                    if (gate == Gate.OPEN && !loaded) {
+                        _state.update { it.copy(loading = true) }
+                    }
                     val decrypted = if (gate == Gate.OPEN) decryptAll(notes) else emptyList()
-                    _state.update { it.copy(items = decrypted, notes = notes) }
+                    loaded = gate == Gate.OPEN
+                    _state.update {
+                        it.copy(
+                            items = decrypted,
+                            notes = notes,
+                            loading = false
+                        )
+                    }
                 }
         }
     }
@@ -161,6 +176,8 @@ class HiddenNotesViewModel @Inject constructor(
         val notes: List<Note> = emptyList(),
         val items: List<HiddenNoteUi> = emptyList(),
         val selected: Set<Int> = emptySet(),
-        val selectMode: Boolean = false
+        val selectMode: Boolean = false,
+        /** True while the vault is decrypting its rows for the first time after a lock. */
+        val loading: Boolean = false
     )
 }

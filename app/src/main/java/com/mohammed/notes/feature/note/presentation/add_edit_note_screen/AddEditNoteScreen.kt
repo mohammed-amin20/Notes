@@ -68,6 +68,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohammed.notes.R
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.entity.NoteCategory
 import com.mohammed.notes.feature.core.presentation.util.formatDateTime
+import com.mohammed.notes.feature.privacy.presentation.SecureScreen
 import com.mohammed.notes.feature.note.presentation.SharedViewModel
 import com.mohammed.notes.feature.note.presentation.add_edit_note_screen.AddEditNoteScreenViewModel.UiAction
 import com.mohammed.notes.ui.theme.Motion
@@ -115,17 +116,21 @@ fun AddEditNoteScreen(
         viewModel.onAction(AddEditNoteScreenAction.OnBackClicked)
     }
 
-    val sharedKey = if (state.hydrated && !state.isNewNote && state.noteId != null) {
-        "note-${state.noteId}"
-    } else {
-        "note-new"
-    }
+    // Keyed off the origin note instead of hydration state: a vault note decrypts
+    // asynchronously, and its card must still morph on the destination's first frame.
+    val originNoteId = sharedViewModel.note?.id
+    val sharedKey = if (originNoteId != null) "note-$originNoteId" else "note-new"
     val sharedModifier = with(sharedTransitionScope) {
         Modifier.sharedBounds(
             sharedContentState = rememberSharedContentState(key = sharedKey),
             animatedVisibilityScope = animatedVisibilityScope,
             boundsTransform = { _, _ -> tween(Motion.sharedBounds) }
         )
+    }
+
+    // Vault content stays out of screenshots while its note is on screen.
+    if (state.hidden || sharedViewModel.note?.hidden == true) {
+        SecureScreen()
     }
 
     Scaffold(
@@ -152,33 +157,48 @@ fun AddEditNoteScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        viewModel.onAction(AddEditNoteScreenAction.OnPinToggled)
-                    }) {
-                        Icon(
-                            painter = painterResource(
-                                if (state.pinned) R.drawable.ic_pin_24 else R.drawable.ic_pin_outline_24
-                            ),
-                            contentDescription = stringResource(
-                                if (state.pinned) R.string.action_unpin else R.string.action_pin
-                            ),
-                            tint = if (state.pinned) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                    }
-                    if (state.hasContent) {
+                    // Hidden notes are never pinned, so the toggle only exists outside the vault.
+                    if (!state.hidden) {
                         IconButton(onClick = {
-                            viewModel.onAction(AddEditNoteScreenAction.OnHideClicked)
+                            viewModel.onAction(AddEditNoteScreenAction.OnPinToggled)
                         }) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_visibility_off),
-                                contentDescription = stringResource(R.string.hidden_hide),
+                                painter = painterResource(
+                                    if (state.pinned) R.drawable.ic_pin_24 else R.drawable.ic_pin_outline_24
+                                ),
+                                contentDescription = stringResource(
+                                    if (state.pinned) R.string.action_unpin else R.string.action_pin
+                                ),
+                                tint = if (state.pinned) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                        }
+                    }
+                    if (state.hidden || state.hasContent) {
+                        IconButton(onClick = {
+                            viewModel.onAction(
+                                if (state.hidden) {
+                                    AddEditNoteScreenAction.OnUnhideClicked
+                                } else {
+                                    AddEditNoteScreenAction.OnHideClicked
+                                }
+                            )
+                        }) {
+                            Icon(
+                                painter = painterResource(
+                                    if (state.hidden) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                                ),
+                                contentDescription = stringResource(
+                                    if (state.hidden) R.string.hidden_unhide else R.string.hidden_hide
+                                ),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                    }
+                    if (state.hasContent) {
                         IconButton(onClick = {
                             viewModel.onAction(AddEditNoteScreenAction.OnSaveClicked)
                         }) {
