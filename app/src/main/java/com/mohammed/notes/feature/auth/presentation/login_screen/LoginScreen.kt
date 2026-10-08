@@ -132,7 +132,7 @@ fun LoginContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.memo_logo_foreground),
+                        painter = painterResource(R.drawable.memo_logo),
                         contentDescription = null,
                         modifier = Modifier.size(72.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.accent)

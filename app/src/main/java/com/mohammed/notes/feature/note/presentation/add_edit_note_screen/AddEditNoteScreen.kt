@@ -79,6 +79,7 @@ import com.mohammed.notes.ui.theme.Space
 @Composable
 fun AddEditNoteScreen(
     goToHome: () -> Unit,
+    goToHiddenNotes: () -> Unit,
     sharedViewModel: SharedViewModel,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -96,9 +97,13 @@ fun AddEditNoteScreen(
             when (uiAction) {
                 UiAction.OnBackNavigation -> goToHome()
                 UiAction.AskDiscardConfirmation -> showDiscardDialog = true
+                UiAction.SetupPinRequired -> goToHiddenNotes()
             }
         }
     }
+
+    // Recreated after the setup gate closes: finishes a hide that was parked mid-edit.
+    LaunchedEffect(Unit) { viewModel.onReturnedFromGate() }
 
     LaunchedEffect(state.hydrated, state.isNewNote) {
         if (state.hydrated && state.isNewNote) {
@@ -165,6 +170,15 @@ fun AddEditNoteScreen(
                         )
                     }
                     if (state.hasContent) {
+                        IconButton(onClick = {
+                            viewModel.onAction(AddEditNoteScreenAction.OnHideClicked)
+                        }) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_visibility_off),
+                                contentDescription = stringResource(R.string.hidden_hide),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         IconButton(onClick = {
                             viewModel.onAction(AddEditNoteScreenAction.OnSaveClicked)
                         }) {

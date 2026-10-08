@@ -11,5 +11,6 @@ sealed interface ViewNotesScreenAction {
     data object OnDeleteNotesConfirmed : ViewNotesScreenAction
     data object OnUndoDelete : ViewNotesScreenAction
     data object OnPinClick : ViewNotesScreenAction
+    data object OnHideNotesClick : ViewNotesScreenAction
     data object OnRetryLoad : ViewNotesScreenAction
 }

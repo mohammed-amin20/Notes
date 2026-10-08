@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.NotesDB
 import com.mohammed.notes.feature.core.data.data_source.local.shared_prefs.NotesPrefs
+import com.mohammed.notes.feature.core.security.PrivacyStore
+import com.mohammed.notes.feature.privacy.presentation.PrivacyLockController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +19,8 @@ import javax.inject.Inject
 class SettingsScreenViewModel @Inject constructor(
     private val db: NotesDB,
     private val prefs: NotesPrefs,
+    private val privacy: PrivacyStore,
+    private val privacyLock: PrivacyLockController,
 ) : ViewModel() {
     private val _state = MutableStateFlow(SettingsScreenState())
     val state = _state.asStateFlow()
@@ -34,7 +38,8 @@ class SettingsScreenViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     username = user?.username.orEmpty(),
-                    email = user?.email.orEmpty()
+                    email = user?.email.orEmpty(),
+                    hasPin = privacy.hasPin(prefs.getUserId())
                 )
             }
         }
@@ -53,6 +58,7 @@ class SettingsScreenViewModel @Inject constructor(
             SettingsScreenAction.OnLogoutConfirmed -> {
                 prefs.setLoggedIn(false)
                 prefs.setUserId(0)
+                privacyLock.lock()
                 _state.update { it.copy(logoutDialogVisible = false) }
                 _loggedOut.tryEmit(Unit)
             }

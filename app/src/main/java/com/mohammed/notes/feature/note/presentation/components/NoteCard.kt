@@ -46,11 +46,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mohammed.notes.R
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.entity.Note
-import com.mohammed.notes.feature.core.presentation.util.formatTime
+import com.mohammed.notes.feature.core.presentation.util.formatNoteDate
 import com.mohammed.notes.ui.theme.Motion
 import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.Space
 import com.mohammed.notes.ui.theme.accent
+import java.time.LocalDate
 
 /**
  * A note in the list.
@@ -60,10 +61,15 @@ import com.mohammed.notes.ui.theme.accent
  * parent, which both reflowed the card on entering select mode and nested a second tap
  * target. Tapping the card already toggles selection in select mode, so the indicator is
  * purely visual now.
+ *
+ * [today] is the shared calendar day the date label buckets against; [labelTick] bumps
+ * on resume and at local midnight so visible cards re-derive their label.
  */
 @Composable
 fun NoteCard(
     note: Note,
+    today: LocalDate,
+    labelTick: Int,
     selected: Boolean,
     selectMode: Boolean,
     onOpen: () -> Unit,
@@ -101,7 +107,9 @@ fun NoteCard(
         note.text.lines().drop(1).joinToString("\n").trimStart('\n')
     }
     val titleText = displayTitle.ifBlank { stringResource(R.string.note_untitled) }
-    val timeText = formatTime(context, note.timestamp)
+    val timeText = remember(note.timestamp, today, labelTick) {
+        formatNoteDate(context, note.timestamp, today)
+    }
     val pinnedLabel = stringResource(R.string.cd_note_pinned)
 
     val description = buildString {
@@ -129,7 +137,7 @@ fun NoteCard(
                 this.selected = selected
                 role = Role.Button
             }
-.combinedClickable(
+            .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = {
@@ -185,7 +193,12 @@ fun NoteCard(
                     Text(
                         text = timeText,
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        // Longer labels (date + year, Arabic) shrink to one line instead of
+                        // wrapping over the card's fixed height or crowding the pin icon.
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                     if (note.pinned) {
                         Spacer(Modifier.width(Space.sm))
@@ -213,7 +226,7 @@ private fun SelectionIndicator(visible: Boolean, selected: Boolean) {
         label = "selectionWidth"
     )
     val alpha by animateFloatAsState(
-        targetValue = if (visible) 1f else 0f,
+        targetValue = if (selected) 1f else 0f,
         animationSpec = tween(Motion.enter),
         label = "selectionAlpha"
     )

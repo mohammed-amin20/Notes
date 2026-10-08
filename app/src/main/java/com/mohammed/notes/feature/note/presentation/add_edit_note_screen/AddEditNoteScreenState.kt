@@ -16,7 +16,12 @@ data class AddEditNoteScreenState(
     /** Snapshot of what was loaded from storage, used to detect unsaved edits. */
     val loadedTitle: String = "",
     val loadedText: String = "",
-    val loadedCategory: String? = null
+    val loadedCategory: String? = null,
+    /**
+     * Hide was pressed before a vault existed; the editor sends the user to the setup
+     * gate and finishes the hide on their return instead of dropping the edit.
+     */
+    val hidePending: Boolean = false
 ) {
     val isDirty: Boolean
         get() = title != loadedTitle || text != loadedText || category != loadedCategory

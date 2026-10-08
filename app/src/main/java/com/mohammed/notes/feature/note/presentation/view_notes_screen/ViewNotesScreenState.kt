@@ -13,6 +13,15 @@ data class ViewNotesScreenState(
     val lastDeleted: List<Note> = emptyList(),
     /** Bumped on every delete so the undo snackbar re-shows even for identical counts. */
     val lastDeleteId: Int = 0,
+    /** Bumped on every hide so the confirmation snackbar re-shows for identical counts. */
+    val lastHiddenId: Int = 0,
+    val lastHiddenCount: Int = 0,
+    /**
+     * The user tapped Hide before a PIN existed and was sent to the setup gate. The
+     * selection is kept so the hide completes automatically on return instead of asking
+     * them to re-pick everything.
+     */
+    val hidePending: Boolean = false,
     /**
      * The Room flow emits asynchronously after first frame; until the first emission a blank
      * `notes` would render the false "No notes yet" state. These two fields keep the splash,

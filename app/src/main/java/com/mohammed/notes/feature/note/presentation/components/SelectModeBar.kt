@@ -99,7 +99,23 @@ fun SelectModeActionBar(
     allSelected: Boolean,
     onPinClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    primaryLabel: String = stringResource(
+        if (allSelected) R.string.action_unpin else R.string.action_pin
+    ),
+    primaryIcon: @Composable () -> Unit = {
+        Icon(
+            painter = painterResource(
+                if (allSelected) R.drawable.ic_pin_24 else R.drawable.ic_pin_outline_24
+            ),
+            contentDescription = null,
+            modifier = Modifier.size(22.dp)
+        )
+    },
+    /** Present only on the note list — the private area has nothing left to hide into. */
+    onSecondaryClick: (() -> Unit)? = null,
+    secondaryLabel: String = "",
+    secondaryIcon: (@Composable () -> Unit)? = null
 ) {
     val enabled = selectedCount > 0
 
@@ -120,22 +136,21 @@ fun SelectModeActionBar(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             SelectAction(
-                label = stringResource(
-                    if (allSelected) R.string.action_unpin else R.string.action_pin
-                ),
+                label = primaryLabel,
                 enabled = enabled,
                 tint = MaterialTheme.colorScheme.accent,
                 onClick = onPinClick,
-                icon = {
-                    Icon(
-                        painter = painterResource(
-                            if (allSelected) R.drawable.ic_pin_24 else R.drawable.ic_pin_outline_24
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
+                icon = primaryIcon
             )
+            if (onSecondaryClick != null && secondaryIcon != null) {
+                SelectAction(
+                    label = secondaryLabel,
+                    enabled = enabled,
+                    tint = MaterialTheme.colorScheme.accent,
+                    onClick = onSecondaryClick,
+                    icon = secondaryIcon
+                )
+            }
             SelectAction(
                 label = stringResource(R.string.action_delete),
                 enabled = enabled,

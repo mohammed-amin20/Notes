@@ -16,6 +16,7 @@ sealed interface AddEditNoteScreenAction {
     data class OnCategoryChanged(val category: String?) : AddEditNoteScreenAction
     data object OnPinToggled : AddEditNoteScreenAction
     data object OnSaveClicked : AddEditNoteScreenAction
+    data object OnHideClicked : AddEditNoteScreenAction
     data object OnBackClicked : AddEditNoteScreenAction
     data object OnDiscardConfirmed : AddEditNoteScreenAction
 }

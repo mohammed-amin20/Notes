@@ -27,6 +27,7 @@ import com.mohammed.notes.feature.auth.presentation.AuthNavHost
 import com.mohammed.notes.feature.core.data.data_source.local.shared_prefs.NotesPrefs
 import com.mohammed.notes.feature.core.presentation.startup.StartupScreen
 import com.mohammed.notes.feature.note.presentation.NoteNavHost
+import com.mohammed.notes.feature.privacy.presentation.PrivacyLockController
 import com.mohammed.notes.ui.locale.AppLocale
 import com.mohammed.notes.ui.locale.AppLocaleController
 import com.mohammed.notes.ui.locale.LocalAppLocaleController
@@ -45,6 +46,19 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var notesPrefs: NotesPrefs
+
+    @Inject
+    lateinit var privacyLock: PrivacyLockController
+
+    /**
+     * Backgrounding drops the private-area unlock. The controller is in-memory, so this is
+     * the difference between "locked when you come back" and "still open over a shoulder
+     * in the recents screen". Process death already covers the extreme case.
+     */
+    override fun onStop() {
+        super.onStop()
+        if (::privacyLock.isInitialized) privacyLock.lock()
+    }
 
     override fun attachBaseContext(newBase: Context) {
         // Hilt has not injected `notesPrefs` yet at this point, so read the same prefs file

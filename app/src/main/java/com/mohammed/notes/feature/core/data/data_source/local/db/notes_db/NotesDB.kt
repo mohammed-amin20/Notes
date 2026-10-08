@@ -21,7 +21,7 @@ abstract class NotesDB : RoomDatabase(){
 
     companion object{
         const val DB_NAME = "notes_db"
-        const val DB_VERSION = 2
+        const val DB_VERSION = 3
 
         /**
          * v1 -> v2 adds `Note.category`.
@@ -34,6 +34,21 @@ abstract class NotesDB : RoomDatabase(){
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `Note` ADD COLUMN category TEXT")
+            }
+        }
+
+        /**
+         * v2 -> v3 adds `Note.hidden` and `Note.enc_nonce`.
+         *
+         * `hidden INTEGER NOT NULL DEFAULT 0` matches the entity's Boolean (0/1) and makes
+         * every existing row visible with zero data loss; `enc_nonce TEXT` is nullable, which
+         * is exactly the entity's declaration. No backfill is needed because hidden notes
+         * did not exist before this version.
+         */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `Note` ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `Note` ADD COLUMN enc_nonce TEXT")
             }
         }
     }

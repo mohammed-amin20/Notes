@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Night counterpart of values-v31/themes.xml: same mark in the dark accent tint. -->
+    <style name="Theme.Notes" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorBackground">@color/launch_background</item>
+        <item name="android:windowBackground">@color/launch_background</item>
+        <item name="android:windowSplashScreenBackground">@color/launch_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/memo_logo_splash_dark</item>
+    </style>
+</resources>

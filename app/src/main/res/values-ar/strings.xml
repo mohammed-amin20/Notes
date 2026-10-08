@@ -103,6 +103,8 @@
     <string name="cd_note_pinned">مثبّتة</string>
     <string name="cd_open_note">فتح الملاحظة</string>
     <string name="note_untitled">بدون عنوان</string>
+    <string name="date_today_time">اليوم، %1$s</string>
+    <string name="date_yesterday_time">أمس، %1$s</string>
 
     <!-- Editor -->
     <string name="editor_new_note">ملاحظة جديدة</string>
@@ -148,4 +150,35 @@
     <string name="error_startup_failed">تعذّر تشغيل ميمو.</string>
     <string name="error_notes_load_failed">تعذّر تحميل ملاحظاتك.</string>
     <string name="action_retry">إعادة المحاولة</string>
+
+    <!-- Privacy -->
+    <string name="settings_privacy">الخصوصية</string>
+    <string name="privacy_hidden_notes">الملاحظات المخفية</string>
+    <string name="privacy_change_pin">تغيير رمز PIN</string>
+    <string name="privacy_set_pin">تعيين رمز PIN</string>
+    <string name="pin_set_title">عيّن رمز PIN مكوّنًا من 4 أرقام</string>
+    <string name="pin_confirm_title">أكّد رمز PIN</string>
+    <string name="pin_change_title">تغيير رمز PIN</string>
+    <string name="pin_verify_title">أدخل رمز PIN</string>
+    <string name="pin_mismatch">رمزان PIN غير متطابقين. حاول مرة أخرى.</string>
+    <string name="pin_wrong">رمز PIN غير صحيح</string>
+    <string name="pin_locked_try_later">محاولات كثيرة جدًا. حاول لاحقًا.</string>
+    <string name="pin_forgot">نسيت رمز PIN؟</string>
+    <string name="pin_reset_title">إعادة تعيين الخصوصية؟</string>
+    <string name="pin_reset_body">سيتم حذف ملاحظاتك المخفية نهائيًا وإزالة رمز PIN. لا يمكن التراجع عن ذلك. ملاحظاتك الأخرى لا تتأثر.</string>
+    <string name="pin_reset_confirm">إعادة تعيين</string>
+    <string name="pin_try_again_in">حاول مجددًا خلال %1$s</string>
+    <string name="hidden_empty">لا توجد ملاحظات مخفية</string>
+    <string name="hidden_unhide">إظهار</string>
+    <string name="hidden_hide">إخفاء</string>
+    <string name="hidden_broken">لا يمكن فك تشفير هذه الملاحظة.</string>
+    <string name="hidden_setup_hint">عيّن رمز PIN لحماية ملاحظاتك المخفية.</string>
+    <plurals name="notes_hidden">
+        <item quantity="zero">تم إخفاء أي ملاحظة</item>
+        <item quantity="one">تم إخفاء ملاحظة واحدة</item>
+        <item quantity="two">تم إخفاء ملاحظتين</item>
+        <item quantity="few">تم إخفاء %d ملاحظات</item>
+        <item quantity="many">تم إخفاء %d ملاحظة</item>
+        <item quantity="other">تم إخفاء %d ملاحظة</item>
+    </plurals>
 </resources>

@@ -6,6 +6,7 @@ import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.NotesD
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.entity.Note
 import com.mohammed.notes.feature.core.data.data_source.local.shared_prefs.NotesPrefs
 import com.mohammed.notes.feature.core.presentation.util.wordCount
+import com.mohammed.notes.feature.core.security.PrivacyStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AddEditNoteScreenViewModel @Inject constructor(
     val db: NotesDB,
-    val notesPrefs: NotesPrefs
+    val notesPrefs: NotesPrefs,
+    private val store: PrivacyStore
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AddEditNoteScreenState())
@@ -65,7 +67,9 @@ class AddEditNoteScreenViewModel @Inject constructor(
                 }
             }
 
-            AddEditNoteScreenAction.OnSaveClicked -> save()
+            AddEditNoteScreenAction.OnSaveClicked -> save(hidden = false)
+
+            AddEditNoteScreenAction.OnHideClicked -> hide()
 
             AddEditNoteScreenAction.OnBackClicked -> {
                 if (_state.value.showDiscardPrompt) {
@@ -116,26 +120,62 @@ class AddEditNoteScreenViewModel @Inject constructor(
         }
     }
 
-    private fun save() {
+    /**
+     * The editor's quick-hide. Without a vault the edit is parked in state and the user
+     * is sent to setup; `onReturnedFromGate` finishes the job with whatever they typed,
+     * so a round-trip through the PIN screen never costs them the note.
+     */
+    private fun hide() {
+        if (!store.hasPin(notesPrefs.getUserId())) {
+            _state.update { it.copy(hidePending = true) }
+            viewModelScope.launch { _uiAction.emit(UiAction.SetupPinRequired) }
+            return
+        }
+        save(hidden = true)
+    }
+
+    fun onReturnedFromGate() {
+        if (!_state.value.hidePending) return
+        if (store.hasPin(notesPrefs.getUserId())) {
+            save(hidden = true)
+        } else {
+            _state.update { it.copy(hidePending = false) }
+        }
+    }
+
+    private fun save(hidden: Boolean) {
         if (saving) return
         saving = true
         viewModelScope.launch {
             val current = _state.value
             try {
                 if (current.hydrated && current.hasContent) {
+                    val userId = notesPrefs.getUserId()
+                    val box = if (hidden) {
+                        store.encryptHiddenContent(
+                            userId,
+                            current.title.trim(),
+                            current.text
+                        )
+                    } else {
+                        null
+                    }
                     db.noteDao.upsertNote(
                         Note(
                             id = current.noteId,
-                            title = current.title.trim(),
-                            text = current.text,
+                            title = if (hidden) "" else current.title.trim(),
+                            text = box?.blobBase64 ?: current.text,
                             timestamp = current.timestamp,
-                            userId = notesPrefs.getUserId(),
-                            pinned = current.pinned,
-                            pinTimestamp = current.pinTimestamp,
-                            category = current.category
+                            userId = userId,
+                            pinned = if (hidden) false else current.pinned,
+                            pinTimestamp = if (hidden) 0L else current.pinTimestamp,
+                            category = current.category,
+                            hidden = hidden,
+                            enc_nonce = box?.nonceBase64
                         )
                     )
                 }
+                _state.update { it.copy(hidePending = false) }
                 _uiAction.emit(UiAction.OnBackNavigation)
             } finally {
                 saving = false
@@ -146,5 +186,6 @@ class AddEditNoteScreenViewModel @Inject constructor(
     sealed interface UiAction {
         data object OnBackNavigation : UiAction
         data object AskDiscardConfirmation : UiAction
+        data object SetupPinRequired : UiAction
     }
 }

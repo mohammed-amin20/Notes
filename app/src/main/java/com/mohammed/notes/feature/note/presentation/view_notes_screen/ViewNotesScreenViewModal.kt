@@ -3,10 +3,14 @@ package com.mohammed.notes.feature.note.presentation.view_notes_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.NotesDB
+import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.entity.Note
 import com.mohammed.notes.feature.core.data.data_source.local.shared_prefs.NotesPrefs
+import com.mohammed.notes.feature.core.security.PrivacyStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
@@ -19,9 +23,17 @@ import javax.inject.Inject
 class ViewNotesScreenViewModal @Inject constructor(
     private val db: NotesDB,
     private val notesPrefs: NotesPrefs,
+    private val store: PrivacyStore
 ) : ViewModel() {
     private val _state = MutableStateFlow(ViewNotesScreenState())
     val state = _state.asStateFlow()
+
+    /**
+     * Navigation asks from a ViewModel are one-shot: re-collecting state on recomposition
+     * would bounce the user back to the gate after they already passed it.
+     */
+    private val _events = MutableSharedFlow<Event>(extraBufferCapacity = 1)
+    val events = _events.asSharedFlow()
 
     /**
      * Retry trigger. The Store keeps its no-replay semantics (a retry past the first has
@@ -131,10 +143,70 @@ class ViewNotesScreenViewModal @Inject constructor(
                 }
             }
 
+            ViewNotesScreenAction.OnHideNotesClick -> hideSelected()
+
             ViewNotesScreenAction.OnRetryLoad -> {
                 reload.value += 1
                 _state.update { it.copy(isLoading = true, loadFailed = false) }
             }
         }
+    }
+
+    /**
+     * Hide without a vault yet: park the selection, send the user through setup, and pick
+     * the intent back up when they return to this screen (which is why `hidePending`
+     * lives in state rather than in a local variable).
+     */
+    private fun hideSelected() {
+        val targets = _state.value.selectedItems
+        if (targets.isEmpty()) return
+        if (!store.hasPin(notesPrefs.getUserId())) {
+            _state.update { it.copy(hidePending = true) }
+            _events.tryEmit(Event.SetupPinRequired)
+            return
+        }
+        encryptAndHide(targets)
+    }
+
+    /** Called on resume from the setup gate; completes a parked hide if the PIN now exists. */
+    fun onReturnedFromGate() {
+        if (!_state.value.hidePending) return
+        if (store.hasPin(notesPrefs.getUserId())) {
+            encryptAndHide(_state.value.selectedItems)
+        } else {
+            _state.update { it.copy(hidePending = false, selectMode = false, selectedItems = emptyList()) }
+        }
+    }
+
+    private fun encryptAndHide(targets: List<Note>) {
+        viewModelScope.launch {
+            val userId = notesPrefs.getUserId()
+            targets.forEach { note ->
+                val box = store.encryptHiddenContent(userId, note.title, note.text)
+                db.noteDao.upsertNote(
+                    note.copy(
+                        title = "",
+                        text = box.blobBase64,
+                        hidden = true,
+                        enc_nonce = box.nonceBase64,
+                        pinned = false,
+                        pinTimestamp = 0L
+                    )
+                )
+            }
+            _state.update {
+                it.copy(
+                    selectMode = false,
+                    selectedItems = emptyList(),
+                    hidePending = false,
+                    lastHiddenCount = targets.size,
+                    lastHiddenId = it.lastHiddenId + 1
+                )
+            }
+        }
+    }
+
+    sealed interface Event {
+        data object SetupPinRequired : Event
     }
 }

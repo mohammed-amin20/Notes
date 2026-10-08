@@ -1,5 +1,4 @@
 package com.mohammed.notes.feature.settings.presentation
-
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
@@ -60,20 +59,21 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.material.icons.filled.Lock
+import com.mohammed.notes.feature.privacy.presentation.PrivacyLockController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mohammed.notes.ui.theme.LocalThemeModeController
+import com.mohammed.notes.ui.locale.LocalAppLocaleController
+import com.mohammed.notes.ui.locale.currentAppLocale
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohammed.notes.R
 import com.mohammed.notes.ui.locale.AppLocale
-import com.mohammed.notes.ui.locale.LocalAppLocaleController
-import com.mohammed.notes.ui.locale.currentAppLocale
 import com.mohammed.notes.ui.theme.FormMeasure
-import com.mohammed.notes.ui.theme.LocalThemeModeController
 import com.mohammed.notes.ui.theme.Motion
 import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.Size
@@ -82,10 +82,14 @@ import com.mohammed.notes.ui.theme.Space
 import com.mohammed.notes.ui.theme.accent
 import com.mohammed.notes.ui.theme.rememberAnimationsEnabled
 
+
+
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
     onLoggedOut: () -> Unit,
+    onGoToHiddenNotes: () -> Unit,
+    onGoToChangePin: () -> Unit,
     viewModal: SettingsScreenViewModel = hiltViewModel()
 ) {
     val state by viewModal.state.collectAsStateWithLifecycle()
@@ -104,6 +108,8 @@ fun SettingsScreen(
         state = state,
         onAction = viewModal::onAction,
         onBack = onBack,
+        onGoToHiddenNotes = onGoToHiddenNotes,
+        onGoToChangePin = onGoToChangePin,
         themeMode = themeController.mode,
         onThemeModeChange = themeController::set,
         locale = currentAppLocale(),
@@ -121,6 +127,8 @@ fun SettingsContent(
     state: SettingsScreenState,
     onAction: (SettingsScreenAction) -> Unit,
     onBack: () -> Unit,
+    onGoToHiddenNotes: () -> Unit,
+    onGoToChangePin: () -> Unit,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
     locale: String,
@@ -173,6 +181,24 @@ fun SettingsContent(
                             onLocaleChange = onLocaleChange,
                             stacked = stacked
                         )
+                    }
+
+                    Spacer(Modifier.size(Space.xl))
+                    SettingsSection(stringResource(R.string.settings_privacy)) {
+                        Column {
+                            SettingsRow(
+                                icon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface) },
+                                title = stringResource(R.string.privacy_hidden_notes),
+                                onClick = onGoToHiddenNotes
+                            )
+                            SettingsRow(
+                                icon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface) },
+                                title = stringResource(
+                                    if (state.hasPin) R.string.privacy_change_pin else R.string.privacy_set_pin
+                                ),
+                                onClick = if (state.hasPin) onGoToChangePin else onGoToHiddenNotes
+                            )
+                        }
                     }
 
                     Spacer(Modifier.size(Space.xl))
@@ -580,7 +606,7 @@ private fun ColumnScope.AboutSectionContent(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(R.drawable.memo_logo_foreground),
+            painter = painterResource(R.drawable.memo_logo),
             contentDescription = null,
             modifier = Modifier.size(Size.logoSize),
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.accent)
@@ -729,6 +755,8 @@ private fun SettingsLightPreview() {
             state = SettingsScreenState(username = "reader", email = "reader@example.com"),
             onAction = {},
             onBack = {},
+            onGoToHiddenNotes = {},
+            onGoToChangePin = {},
             themeMode = ThemeMode.LIGHT,
             onThemeModeChange = {},
             locale = AppLocale.English,
@@ -745,6 +773,8 @@ private fun SettingsDarkPreview() {
             state = SettingsScreenState(),
             onAction = {},
             onBack = {},
+            onGoToHiddenNotes = {},
+            onGoToChangePin = {},
             themeMode = ThemeMode.DARK,
             onThemeModeChange = {},
             locale = AppLocale.Arabic,
@@ -761,6 +791,8 @@ private fun SettingsLogoutDialogPreview() {
             state = SettingsScreenState(logoutDialogVisible = true),
             onAction = {},
             onBack = {},
+            onGoToHiddenNotes = {},
+            onGoToChangePin = {},
             themeMode = ThemeMode.SYSTEM,
             onThemeModeChange = {},
             locale = AppLocale.English,
@@ -777,6 +809,8 @@ private fun SettingsNarrowPreview() {
             state = SettingsScreenState(),
             onAction = {},
             onBack = {},
+            onGoToHiddenNotes = {},
+            onGoToChangePin = {},
             themeMode = ThemeMode.SYSTEM,
             onThemeModeChange = {},
             locale = AppLocale.English,

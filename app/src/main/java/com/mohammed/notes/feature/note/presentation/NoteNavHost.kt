@@ -18,6 +18,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mohammed.notes.feature.note.presentation.add_edit_note_screen.AddEditNoteScreen
 import com.mohammed.notes.feature.note.presentation.view_notes_screen.ViewNotesScreen
+import com.mohammed.notes.feature.privacy.presentation.ChangePin
+import com.mohammed.notes.feature.privacy.presentation.ChangePinRoute
+import com.mohammed.notes.feature.privacy.presentation.HiddenNotes
+import com.mohammed.notes.feature.privacy.presentation.HiddenNotesRoute
 import com.mohammed.notes.feature.settings.presentation.SettingsScreen
 import com.mohammed.notes.ui.theme.Motion
 import kotlinx.serialization.Serializable
@@ -54,6 +58,7 @@ fun NoteNavHost(
                         navController.navigate(Route.AddEditNoteScreen)
                     },
                     goToSettings = { navController.navigate(Route.Settings) },
+                    goToHiddenNotes = { navController.navigate(HiddenNotes) },
                     sharedViewModel = sharedViewModel,
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = this
@@ -64,6 +69,7 @@ fun NoteNavHost(
                     goToHome = {
                         navController.navigateUp()
                     },
+                    goToHiddenNotes = { navController.navigate(HiddenNotes) },
                     sharedViewModel = sharedViewModel,
                     sharedTransitionScope = sharedTransitionScope,
                     animatedVisibilityScope = this
@@ -74,7 +80,18 @@ fun NoteNavHost(
                     onBack = { navController.navigateUp() },
                     // Host-level: pops this graph and lands on the auth flow, which is what
                     // clears the authenticated back stack.
-                    onLoggedOut = goToLogin
+                    onLoggedOut = goToLogin,
+                    onGoToHiddenNotes = { navController.navigate(HiddenNotes) },
+                    onGoToChangePin = { navController.navigate(ChangePin) }
+                )
+            }
+            composable<HiddenNotes> {
+                HiddenNotesRoute(onBack = { navController.navigateUp() })
+            }
+            composable<ChangePin> {
+                ChangePinRoute(
+                    onDone = { navController.navigateUp() },
+                    onCancel = { navController.navigateUp() }
                 )
             }
         }

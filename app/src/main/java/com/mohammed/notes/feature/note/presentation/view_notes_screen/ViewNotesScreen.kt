@@ -69,10 +69,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohammed.notes.R
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.entity.Note
+import com.mohammed.notes.feature.core.presentation.util.rememberDateLabelTick
 import com.mohammed.notes.feature.note.presentation.SharedViewModel
 import com.mohammed.notes.feature.note.presentation.components.EmptyReason
 import com.mohammed.notes.feature.note.presentation.components.NoteCard
@@ -90,6 +92,7 @@ import com.mohammed.notes.ui.theme.Space
 import com.mohammed.notes.ui.theme.accent
 import com.mohammed.notes.ui.theme.listBottomClearance
 import com.mohammed.notes.ui.theme.staggeredAppear
+import java.time.LocalDate
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -97,12 +100,26 @@ import kotlinx.coroutines.launch
 fun ViewNotesScreen(
     goToSettings: () -> Unit,
     goToAddEditNote: () -> Unit,
+    goToHiddenNotes: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     viewModal: ViewNotesScreenViewModal = hiltViewModel(),
     sharedViewModel: SharedViewModel,
 ) {
     val state by viewModal.state.collectAsStateWithLifecycle()
+
+    // Setup→return is a navigation round-trip, so both halves live here: the event sends
+    // the user away, the resume hook completes the hide they originally asked for.
+    LaunchedEffect(Unit) {
+        viewModal.events.collect { event ->
+            when (event) {
+                ViewNotesScreenViewModal.Event.SetupPinRequired -> goToHiddenNotes()
+            }
+        }
+    }
+    // The composable leaves composition while the gate is open and is recreated on
+    // return, so this effect is exactly the "came back" hook that finishes a parked hide.
+    LaunchedEffect(Unit) { viewModal.onReturnedFromGate() }
 
     ViewNotesContent(
         state = state,
@@ -145,9 +162,17 @@ fun ViewNotesContent(
     val snackbarHostState = remember { SnackbarHostState() }
     val fontScale = LocalDensity.current.fontScale
 
+    // One calendar-day snapshot shared by every card; the tick re-takes it when the app
+    // resumes (overnight, or after a 12/24-hour change) and at local midnight.
+    val labelTick = rememberDateLabelTick()
+    val labelDay = remember(labelTick) { LocalDate.now() }
+
     val deletedCount = state.lastDeleted.size
     val deletedMessage = pluralStringResource(R.plurals.notes_deleted, deletedCount, deletedCount)
     val undoLabel = stringResource(R.string.action_undo)
+
+    val hiddenCount = state.lastHiddenCount
+    val hiddenMessage = pluralStringResource(R.plurals.notes_hidden, hiddenCount, hiddenCount)
 
     LaunchedEffect(state.lastDeleteId) {
         if (deletedCount == 0) return@LaunchedEffect
@@ -159,6 +184,14 @@ fun ViewNotesContent(
         if (result == SnackbarResult.ActionPerformed) {
             onAction(ViewNotesScreenAction.OnUndoDelete)
         }
+    }
+
+    LaunchedEffect(state.lastHiddenId) {
+        if (hiddenCount == 0) return@LaunchedEffect
+        snackbarHostState.showSnackbar(
+            message = hiddenMessage,
+            duration = SnackbarDuration.Short
+        )
     }
 
     val visibleNotes = state.visibleNotes
@@ -227,6 +260,15 @@ fun ViewNotesContent(
                     },
                     onDeleteClick = {
                         onAction(ViewNotesScreenAction.OnDeleteDialogVisibleChange(true))
+                    },
+                    onSecondaryClick = { onAction(ViewNotesScreenAction.OnHideNotesClick) },
+                    secondaryLabel = stringResource(R.string.hidden_hide),
+                    secondaryIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_lock_24),
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                 )
             }
@@ -323,6 +365,8 @@ fun ViewNotesContent(
                                 val note = visibleNotes[index]
                                 NoteCard(
                                     note = note,
+                                    today = labelDay,
+                                    labelTick = labelTick,
                                     selected = note in state.selectedItems,
                                     selectMode = state.selectMode,
                                     onOpen = { onOpenNote(note) },
@@ -411,7 +455,7 @@ private fun MemoTopBar(onSettings: () -> Unit) {
         }
         Spacer(Modifier.width(Space.sm))
         Image(
-            painter = painterResource(R.drawable.memo_logo_foreground),
+            painter = painterResource(R.drawable.memo_logo),
             contentDescription = null,
             modifier = Modifier.size(Size.logoSize),
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.accent)

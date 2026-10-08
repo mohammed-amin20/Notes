@@ -71,6 +71,8 @@
     <string name="cd_note_pinned">Pinned</string>
     <string name="cd_open_note">Open note</string>
     <string name="note_untitled">Untitled</string>
+    <string name="date_today_time">Today, %1$s</string>
+    <string name="date_yesterday_time">Yesterday, %1$s</string>
 
     <!-- Editor -->
     <string name="editor_new_note">New note</string>
@@ -118,4 +120,31 @@
     <string name="error_startup_failed">Memo couldn\'t start.</string>
     <string name="error_notes_load_failed">Your notes couldn\'t be loaded.</string>
     <string name="action_retry">Retry</string>
+
+    <!-- Privacy / PIN / Hidden -->
+    <string name="settings_privacy">Privacy</string>
+    <string name="privacy_hidden_notes">Hidden notes</string>
+    <string name="privacy_change_pin">Change PIN</string>
+    <string name="privacy_set_pin">Set PIN</string>
+    <string name="pin_set_title">Set a 4-digit PIN</string>
+    <string name="pin_confirm_title">Confirm PIN</string>
+    <string name="pin_change_title">Change PIN</string>
+    <string name="pin_verify_title">Enter PIN</string>
+    <string name="pin_mismatch">PINs do not match. Try again.</string>
+    <string name="pin_wrong">Incorrect PIN</string>
+    <string name="pin_locked_try_later">Too many attempts. Try again later.</string>
+    <string name="pin_forgot">Forgot PIN?</string>
+    <string name="pin_reset_title">Reset privacy?</string>
+    <string name="pin_reset_body">Your hidden notes will be permanently deleted and the PIN removed. This cannot be undone. Your other notes are not affected.</string>
+    <string name="pin_reset_confirm">Reset</string>
+    <string name="pin_try_again_in">Try again in %1$s</string>
+    <string name="hidden_empty">No hidden notes</string>
+    <string name="hidden_unhide">Unhide</string>
+    <string name="hidden_hide">Hide</string>
+    <string name="hidden_broken">This note can\'t be decrypted.</string>
+    <string name="hidden_setup_hint">Set a PIN to protect your hidden notes.</string>
+    <plurals name="notes_hidden">
+        <item quantity="one">Note hidden</item>
+        <item quantity="other">Notes hidden</item>
+    </plurals>
 </resources>

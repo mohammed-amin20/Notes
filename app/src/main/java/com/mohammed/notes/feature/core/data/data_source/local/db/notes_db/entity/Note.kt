@@ -18,5 +18,16 @@ data class Note(
      * default: that is exactly what the migration produces. `null` means uncategorized, which
      * is what every pre-existing note reads as.
      */
-    val category: String? = null
+    val category: String? = null,
+    /**
+     * Added in DB v3. Hidden notes are excluded from the public queries and keep their
+     * title/text as opaque ciphertext. Room stores `Boolean` as `INTEGER 0`/`1`; the
+     * migration defaults every existing row to 0 (visible), so nothing pre-existing changes.
+     */
+    val hidden: Boolean = false,
+    /**
+     * Present only on hidden rows: the GCM nonce that decrypts `text`. The ciphertext of
+     * title+text lives in `text` (title is left empty) so a hidden row leaks nothing.
+     */
+    val enc_nonce: String? = null
 )
