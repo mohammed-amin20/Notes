@@ -219,13 +219,13 @@ fun AddEditNoteScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.headlineSmall.copy(
+                    textStyle = MaterialTheme.typography.titleLarge.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     ),
                     placeholder = {
                         Text(
                             text = stringResource(R.string.editor_title_hint),
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -300,8 +300,7 @@ fun AddEditNoteScreen(
                         .heightIn(min = 240.dp)
                         .focusRequester(bodyFocusRequester),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.35f
+                        color = MaterialTheme.colorScheme.onSurface
                     ),
                     placeholder = {
                         Text(
@@ -397,7 +396,7 @@ private fun CategoryChip(
                 overflow = TextOverflow.Ellipsis
             )
         },
-        modifier = Modifier.height(Size.filterChipHeight),
+        modifier = Modifier.heightIn(min = Size.filterChipHeight),
         colors = FilterChipDefaults.filterChipColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             labelColor = MaterialTheme.colorScheme.onSurfaceVariant,

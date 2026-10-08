@@ -13,8 +13,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -135,9 +137,16 @@ fun NotesTheme(
     val animationsOn = rememberAnimationsEnabled()
     val colorScheme = base.withAnimatedTheme(if (animationsOn) Motion.enter else 0)
 
+    // Same size ladder for both locales; Arabic swaps in naskh-friendly metrics
+    // (no letter-spacing, taller leading). A locale change recreates the activity.
+    val locale = LocalConfiguration.current.locales[0]
+    val typography = remember(locale) {
+        if (locale.language == "ar") Typography.forArabic else Typography
+    }
+
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         shapes = NotesShapes,
         content = content
     )

@@ -164,7 +164,7 @@ fun SignUpContent(
                 Spacer(Modifier.height(Space.lg))
                 Text(
                     text = stringResource(R.string.auth_signup_title),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
@@ -226,7 +226,7 @@ fun SignUpContent(
                     enabled = canSubmit,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(Size.buttonHeight),
+                        .heightIn(min = Size.buttonHeight),
                     shape = MaterialTheme.shapes.medium,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,

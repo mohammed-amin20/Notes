@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -494,7 +495,7 @@ private fun FilterChipRow(
                         overflow = TextOverflow.Ellipsis
                     )
                 },
-                modifier = Modifier.height(Size.filterChipHeight),
+                modifier = Modifier.heightIn(min = Size.filterChipHeight),
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant,

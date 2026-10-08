@@ -29,20 +29,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.mohammed.notes.R
 import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.accent
 
 /** Auth fields stay in the sans voice at input size, unlike the serif reading surfaces. */
-private val FieldTextStyle = TextStyle(
-    fontFamily = FontFamily.Default,
-    fontWeight = FontWeight.Normal,
-    fontSize = 16.sp,
-    lineHeight = 22.sp
-)
+@Composable
+private fun fieldTextStyle(): TextStyle =
+    MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Default)
 
 /**
  * Replaces the previous placeholder-only field, which had a permanent 1dp border, no
@@ -74,7 +69,7 @@ fun CustomTextField(
         singleLine = singleLine,
         isError = errorText != null,
         shape = MaterialTheme.shapes.medium,
-        textStyle = FieldTextStyle,
+        textStyle = fieldTextStyle(),
         label = { Text(text = label, style = MaterialTheme.typography.labelMedium) },
         leadingIcon = leadingIcon?.let {
             {
