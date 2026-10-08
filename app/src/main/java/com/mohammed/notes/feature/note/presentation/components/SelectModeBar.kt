@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -44,7 +45,9 @@ import com.mohammed.notes.ui.theme.disabledContent
  *
  * The previous version used filled `Button`s with a transparent container and no alpha
  * change when disabled, so Pin and Delete looked fully live with nothing selected. The
- * disabled state is explicit now, and the row mirrors for RTL automatically.
+ * disabled state is explicit now, and the row mirrors for RTL automatically. Actions
+ * size themselves from their content (with a comfortable minimum) so labels stay readable
+ * at large system font scales instead of overflowing a fixed-height box.
  */
 @Composable
 fun SelectModeTopBar(
@@ -181,7 +184,7 @@ private fun SelectAction(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .padding(horizontal = Space.sm)
-            .size(width = 88.dp, height = 64.dp)
+            .sizeIn(minWidth = 88.dp, minHeight = 64.dp)
     ) {
         IconButton(
             onClick = onClick,

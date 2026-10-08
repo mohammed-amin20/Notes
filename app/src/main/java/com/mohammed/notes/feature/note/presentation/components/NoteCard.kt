@@ -1,7 +1,8 @@
 ﻿package com.mohammed.notes.feature.note.presentation.components
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -30,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -43,7 +45,6 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.mohammed.notes.R
 import com.mohammed.notes.feature.core.data.data_source.local.db.notes_db.entity.Note
 import com.mohammed.notes.feature.core.presentation.util.formatNoteDate
@@ -51,16 +52,18 @@ import com.mohammed.notes.ui.theme.Motion
 import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.Space
 import com.mohammed.notes.ui.theme.accent
+import com.mohammed.notes.ui.theme.rememberAnimationsEnabled
 import java.time.LocalDate
 
 /**
  * A note in the list.
  *
- * Selection is shown with a tinted container, a border and a leading indicator. The old
- * card wrapped a 48dp Checkbox in `AnimatedVisibility` *inside* a `combinedClickable`
- * parent, which both reflowed the card on entering select mode and nested a second tap
- * target. Tapping the card already toggles selection in select mode, so the indicator is
- * purely visual now.
+ * Long-press enters selection mode, where a 24dp circle sits in the card's bottom-end
+ * corner. The timestamp row reserves that space at all times, so appearing, toggling, or
+ * clearing selection never reflows the title, preview, or timestamp — the card keeps its
+ * size, shape, padding, and text positions. Selected cards get a tinted container and a
+ * primary border; the whole card (indicator included) is the tap target and toggles
+ * selection once per tap without opening the note.
  *
  * [today] is the shared calendar day the date label buckets against; [labelTick] bumps
  * on resume and at local midnight so visible cards re-derive their label.
@@ -92,6 +95,28 @@ fun NoteCard(
             stiffness = Motion.emphasizedStiffness
         ),
         label = "cardPress"
+    )
+
+    // Selection highlight transitions with the indicator instead of snapping; the whole
+    // set of selection animations is gated on the remove-animations accessibility setting.
+    val animationsOn = rememberAnimationsEnabled()
+    val cardColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        },
+        animationSpec = if (animationsOn) tween(Motion.enter) else snap(),
+        label = "cardSelectionBg"
+    )
+    val cardBorderColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.outlineVariant
+        },
+        animationSpec = if (animationsOn) tween(Motion.enter) else snap(),
+        label = "cardSelectionBorder"
     )
 
     // A note saved with no title borrows its first line so the card is never blank.
@@ -149,123 +174,138 @@ fun NoteCard(
                 }
             ),
         shape = MaterialTheme.shapes.large,
-        color = if (selected) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant
-        },
+        color = cardColor,
         border = BorderStroke(
             width = Size.hairline,
-            color = if (selected) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.outlineVariant
-            }
+            color = cardBorderColor
         )
     ) {
-        Row(
-            modifier = Modifier.padding(Space.lg),
-            verticalAlignment = Alignment.Top
-        ) {
-            SelectionIndicator(visible = selectMode, selected = selected)
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.padding(Space.lg)) {
+            Text(
+                text = titleText,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = maxTitleLines,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (preview.isNotBlank()) {
+                Spacer(Modifier.height(Space.xs))
                 Text(
-                    text = titleText,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = maxTitleLines,
+                    text = preview,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = maxBodyLines,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (preview.isNotBlank()) {
-                    Spacer(Modifier.height(Space.xs))
-                    Text(
-                        text = preview,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = maxBodyLines,
-                        overflow = TextOverflow.Ellipsis
+            }
+            // Absorbs the slack so the timestamp sits on the card's bottom edge no matter
+            // how many title/preview lines were actually needed.
+            Spacer(Modifier.weight(1f))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = timeText,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // Longer labels (date + year, Arabic) shrink to one line instead of
+                    // wrapping over the card's fixed height or crowding the pin icon.
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                if (note.pinned) {
+                    Spacer(Modifier.width(Space.sm))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_pin_24),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.accent,
+                        modifier = Modifier.size(Size.iconSm)
                     )
                 }
-                // Absorbs the slack so the timestamp sits on the card's bottom edge no matter
-                // how many title/preview lines were actually needed.
-                Spacer(Modifier.weight(1f))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = timeText,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        // Longer labels (date + year, Arabic) shrink to one line instead of
-                        // wrapping over the card's fixed height or crowding the pin icon.
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    if (note.pinned) {
-                        Spacer(Modifier.width(Space.sm))
-                        Icon(
-                            painter = painterResource(R.drawable.ic_pin_24),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.accent,
-                            modifier = Modifier.size(Size.iconSm)
-                        )
-                    }
-                }
+                Spacer(Modifier.width(Space.xs))
+                SelectionIndicator(visible = selectMode, selected = selected)
             }
         }
     }
 }
 
+/**
+ * The select-mode circle parked in the card's bottom-end corner.
+ *
+ * Its slot is part of the timestamp row layout at all times, so only alpha, scale, and
+ * color animate here — selection never moves text. Motion is tweened (no overshoot) and
+ * snaps instantly when the system's remove-animations setting is on; cards composed
+ * mid-scroll land on their final value because `animate*AsState` seeds from the first
+ * target it sees rather than replaying an entrance.
+ */
 @Composable
 private fun SelectionIndicator(visible: Boolean, selected: Boolean) {
-    val width by animateDpAsState(
-        targetValue = if (visible) Size.selectionIndicatorWidth else 0.dp,
-        animationSpec = spring(
-            dampingRatio = Motion.spatialDamping,
-            stiffness = Motion.spatialStiffness
-        ),
-        label = "selectionWidth"
-    )
-    val alpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = tween(Motion.enter),
-        label = "selectionAlpha"
-    )
-    if (width == 0.dp) return
+    val animationsOn = rememberAnimationsEnabled()
 
-    Row(modifier = Modifier.width(width)) {
-        Spacer(Modifier.width(Space.xs))
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .graphicsLayer { this.alpha = alpha }
-                .size(width - Space.xs)
+    val appear by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = if (animationsOn) tween(Motion.enter) else snap(),
+        label = "selectionAppear"
+    )
+    val check by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = if (animationsOn) tween(Motion.enter) else snap(),
+        label = "selectionCheck"
+    )
+    val circleColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            Color.Transparent
+        },
+        animationSpec = if (animationsOn) tween(Motion.enter) else snap(),
+        label = "selectionCircle"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.outline
+        },
+        animationSpec = if (animationsOn) tween(Motion.enter) else snap(),
+        label = "selectionBorder"
+    )
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(Size.selectionIndicator)
+            .graphicsLayer {
+                alpha = appear
+                scaleX = 0.85f + 0.15f * appear
+                scaleY = 0.85f + 0.15f * appear
+            }
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = circleColor,
+            border = BorderStroke(
+                width = Size.hairline,
+                color = borderColor
+            ),
+            modifier = Modifier.fillMaxSize()
         ) {
-            Surface(
-                shape = CircleShape,
-                color = if (selected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHighest
-                },
-                border = BorderStroke(
-                    width = Size.hairline,
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.outline
-                    }
-                ),
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (selected) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(Size.iconMd)
-                        )
-                    }
+                if (selected || check > 0f) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier
+                            .size(Size.iconSm)
+                            .graphicsLayer {
+                                alpha = check
+                                scaleX = 0.6f + 0.4f * check
+                                scaleY = 0.6f + 0.4f * check
+                            }
+                    )
                 }
             }
         }

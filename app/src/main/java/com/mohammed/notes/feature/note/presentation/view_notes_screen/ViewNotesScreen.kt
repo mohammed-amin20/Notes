@@ -1,14 +1,19 @@
 ﻿package com.mohammed.notes.feature.note.presentation.view_notes_screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -92,6 +97,7 @@ import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.Space
 import com.mohammed.notes.ui.theme.accent
 import com.mohammed.notes.ui.theme.listBottomClearance
+import com.mohammed.notes.ui.theme.rememberAnimationsEnabled
 import com.mohammed.notes.ui.theme.staggeredAppear
 import java.time.LocalDate
 import kotlinx.coroutines.launch
@@ -168,6 +174,14 @@ fun ViewNotesContent(
     val labelTick = rememberDateLabelTick()
     val labelDay = remember(labelTick) { LocalDate.now() }
 
+    // Back during selection clears it and stays on the list; the top-bar Close does the
+    // same. A confirmation dialog, if open, consumes back first and just dismisses.
+    BackHandler(enabled = state.selectMode) {
+        onAction(ViewNotesScreenAction.OnSelectModeChange(false))
+        onAction(ViewNotesScreenAction.OnSelectedItemsChange(emptyList()))
+    }
+    val animationsOn = rememberAnimationsEnabled()
+
     val deletedCount = state.lastDeleted.size
     val deletedMessage = pluralStringResource(R.plurals.notes_deleted, deletedCount, deletedCount)
     val undoLabel = stringResource(R.string.action_undo)
@@ -219,11 +233,14 @@ fun ViewNotesContent(
                     onToggleSelectAll = {
                         val pool = state.visibleNotes
                         val all = state.selectedItems.size == pool.size
-                        onAction(
-                            ViewNotesScreenAction.OnSelectedItemsChange(
-                                if (all) emptyList() else pool
-                            )
-                        )
+                        if (all) {
+                            // Deselecting everything also ends selection mode, matching
+                            // what tapping the last card off does.
+                            onAction(ViewNotesScreenAction.OnSelectedItemsChange(emptyList()))
+                            onAction(ViewNotesScreenAction.OnSelectModeChange(false))
+                        } else {
+                            onAction(ViewNotesScreenAction.OnSelectedItemsChange(pool))
+                        }
                     }
                 )
             } else {
@@ -249,7 +266,19 @@ fun ViewNotesContent(
             }
         },
         bottomBar = {
-            if (state.selectMode) {
+            AnimatedVisibility(
+                visible = state.selectMode,
+                enter = if (animationsOn) {
+                    expandVertically(tween(Motion.enter)) + fadeIn(tween(Motion.enter))
+                } else {
+                    EnterTransition.None
+                },
+                exit = if (animationsOn) {
+                    shrinkVertically(tween(Motion.exit)) + fadeOut(tween(Motion.exit))
+                } else {
+                    ExitTransition.None
+                }
+            ) {
                 SelectModeActionBar(
                     selectedCount = state.selectedItems.size,
                     allSelected = state.allSelectedPinned,
@@ -578,11 +607,13 @@ private fun onToggleSelection(
     onAction: (ViewNotesScreenAction) -> Unit
 ) {
     val selected = state.selectedItems
-    onAction(
-        ViewNotesScreenAction.OnSelectedItemsChange(
-            if (note in selected) selected - note else selected + note
-        )
-    )
+    val next = if (note in selected) selected - note else selected + note
+    onAction(ViewNotesScreenAction.OnSelectedItemsChange(next))
+    // Clearing the last selected card ends selection mode instead of stranding an
+    // empty top/bottom bar.
+    if (next.isEmpty()) {
+        onAction(ViewNotesScreenAction.OnSelectModeChange(false))
+    }
 }
 
 private fun onLongPress(

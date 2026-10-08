@@ -41,8 +41,12 @@ object Size {
      */
     val noteCardHeight = 176.dp
 
-    /** Select-mode indicator: the 28dp circle plus its gap. The whole card is the tap target. */
-    val selectionIndicatorWidth = 32.dp
+    /**
+     * Select-mode circle. The card reserves this width (plus its gap) at the end of the
+     * timestamp row at all times, so entering selection or toggling a note never reflows
+     * the title or timestamp. The whole card is the tap target.
+     */
+    val selectionIndicator = 24.dp
 }
 
 /**
