@@ -62,6 +62,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,6 +73,7 @@ import com.mohammed.notes.feature.privacy.presentation.SecureScreen
 import com.mohammed.notes.feature.note.presentation.SharedViewModel
 import com.mohammed.notes.feature.note.presentation.add_edit_note_screen.AddEditNoteScreenViewModel.UiAction
 import com.mohammed.notes.ui.theme.Motion
+import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.ReadableMeasure
 import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.Space
@@ -90,7 +92,6 @@ fun AddEditNoteScreen(
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
 
     val bodyFocusRequester = remember { FocusRequester() }
-    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.onAction(AddEditNoteScreenAction.OnNoteLoaded(sharedViewModel.note))
@@ -133,6 +134,33 @@ fun AddEditNoteScreen(
         SecureScreen()
     }
 
+    AddEditNoteContent(
+        state = state,
+        showDiscardDialog = showDiscardDialog,
+        onDismissDiscardDialog = { showDiscardDialog = false },
+        onAction = { viewModel.onAction(it) },
+        bodyFocusRequester = bodyFocusRequester,
+        modifier = sharedModifier
+    )
+}
+
+/**
+ * Stateless editor body so the screen's infrastructure (navigation, vault gate, shared
+ * element) stays out of @Preview. All edits funnel through [onAction]; the discard dialog
+ * is owned by the caller and mirrored here through [showDiscardDialog].
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun AddEditNoteContent(
+    state: AddEditNoteScreenState,
+    showDiscardDialog: Boolean,
+    onDismissDiscardDialog: () -> Unit,
+    onAction: (AddEditNoteScreenAction) -> Unit,
+    bodyFocusRequester: FocusRequester,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -147,7 +175,7 @@ fun AddEditNoteScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        viewModel.onAction(AddEditNoteScreenAction.OnBackClicked)
+                        onAction(AddEditNoteScreenAction.OnBackClicked)
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -160,7 +188,7 @@ fun AddEditNoteScreen(
                     // Hidden notes are never pinned, so the toggle only exists outside the vault.
                     if (!state.hidden) {
                         IconButton(onClick = {
-                            viewModel.onAction(AddEditNoteScreenAction.OnPinToggled)
+                            onAction(AddEditNoteScreenAction.OnPinToggled)
                         }) {
                             Icon(
                                 painter = painterResource(
@@ -179,7 +207,7 @@ fun AddEditNoteScreen(
                     }
                     if (state.hidden || state.hasContent) {
                         IconButton(onClick = {
-                            viewModel.onAction(
+                            onAction(
                                 if (state.hidden) {
                                     AddEditNoteScreenAction.OnUnhideClicked
                                 } else {
@@ -200,7 +228,7 @@ fun AddEditNoteScreen(
                     }
                     if (state.hasContent) {
                         IconButton(onClick = {
-                            viewModel.onAction(AddEditNoteScreenAction.OnSaveClicked)
+                            onAction(AddEditNoteScreenAction.OnSaveClicked)
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Done,
@@ -230,12 +258,12 @@ fun AddEditNoteScreen(
                     .widthIn(max = ReadableMeasure)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .then(sharedModifier)
+                    .then(modifier)
             ) {
                 TextField(
                     value = state.title,
                     onValueChange = {
-                        viewModel.onAction(AddEditNoteScreenAction.OnTitleChanged(it))
+                        onAction(AddEditNoteScreenAction.OnTitleChanged(it))
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -306,14 +334,14 @@ fun AddEditNoteScreen(
                 CategoryRow(
                     category = state.category,
                     onCategoryChange = {
-                        viewModel.onAction(AddEditNoteScreenAction.OnCategoryChanged(it))
+                        onAction(AddEditNoteScreenAction.OnCategoryChanged(it))
                     }
                 )
 
                 TextField(
                     value = state.text,
                     onValueChange = {
-                        viewModel.onAction(AddEditNoteScreenAction.OnTextChanged(it))
+                        onAction(AddEditNoteScreenAction.OnTextChanged(it))
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -342,13 +370,13 @@ fun AddEditNoteScreen(
 
     if (showDiscardDialog) {
         AlertDialog(
-            onDismissRequest = { showDiscardDialog = false },
+            onDismissRequest = onDismissDiscardDialog,
             title = { Text(stringResource(R.string.editor_discard_title)) },
             text = { Text(stringResource(R.string.editor_discard_body)) },
             confirmButton = {
                 TextButton(onClick = {
-                    showDiscardDialog = false
-                    viewModel.onAction(AddEditNoteScreenAction.OnDiscardConfirmed)
+                    onDismissDiscardDialog()
+                    onAction(AddEditNoteScreenAction.OnDiscardConfirmed)
                 }) {
                     Text(
                         text = stringResource(R.string.action_discard),
@@ -357,7 +385,7 @@ fun AddEditNoteScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDiscardDialog = false }) {
+                TextButton(onClick = onDismissDiscardDialog) {
                     Text(stringResource(R.string.action_keep_editing))
                 }
             },
@@ -441,8 +469,53 @@ private fun editorFieldColors() = TextFieldDefaults.colors(
     focusedIndicatorColor = Color.Transparent,
     unfocusedIndicatorColor = Color.Transparent,
     cursorColor = MaterialTheme.colorScheme.primary,
-selectionColors = TextSelectionColors(
-            handleColor = MaterialTheme.colorScheme.primary,
-            backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
-        )
+    selectionColors = TextSelectionColors(
+        handleColor = MaterialTheme.colorScheme.primary,
+        backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+    )
 )
+
+// --- Previews --------------------------------------------------------------
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun AddEditNoteLightPreview() {
+    NotesTheme(darkTheme = false) {
+        AddEditNoteContent(
+            state = previewEditorState(),
+            showDiscardDialog = false,
+            onDismissDiscardDialog = {},
+            onAction = {},
+            bodyFocusRequester = remember { FocusRequester() }
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun AddEditNoteDarkPreview() {
+    NotesTheme(darkTheme = true) {
+        AddEditNoteContent(
+            state = previewEditorState(),
+            showDiscardDialog = false,
+            onDismissDiscardDialog = {},
+            onAction = {},
+            bodyFocusRequester = remember { FocusRequester() }
+        )
+    }
+}
+
+/** Safe, synthetic content for previews — never real user data. */
+private fun previewEditorState(): AddEditNoteScreenState {
+    val now = System.currentTimeMillis()
+    return AddEditNoteScreenState(
+        title = "A walk by the river",
+        text = "Cold morning, fog over the water. Jotting ideas for the weekend.",
+        wordCount = 11,
+        charCount = 64,
+        timestamp = now - 3 * 60 * 60 * 1000L,
+        isNewNote = false,
+        hydrated = true,
+        category = NoteCategory.WORK.key
+    )
+}
