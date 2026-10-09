@@ -8,14 +8,19 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -48,8 +53,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,8 +68,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -100,6 +108,7 @@ import com.mohammed.notes.ui.theme.listBottomClearance
 import com.mohammed.notes.ui.theme.rememberAnimationsEnabled
 import com.mohammed.notes.ui.theme.staggeredAppear
 import java.time.LocalDate
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -182,6 +191,39 @@ fun ViewNotesContent(
     }
     val animationsOn = rememberAnimationsEnabled()
 
+    // The "New note" label on the create button. The intro-complete flag is hoisted here
+    // (outside the FAB slot) so selection-mode removal or slot recomposition never replays
+    // the introduction.
+    var fabExpanded by remember { mutableStateOf(false) }
+    var fabIntroDone by remember { mutableStateOf(false) }
+
+    // On its own recomposes never run this again — the keys only change on readiness,
+    // direction, or the compact-motion setting.
+    LaunchedEffect(state.isLoading, state.loadFailed, fabIntroDone, animationsOn) {
+        if (fabIntroDone || state.isLoading || state.loadFailed) return@LaunchedEffect
+        fabExpanded = true
+        delay(FAB_LABEL_MS)
+        fabExpanded = false
+        fabIntroDone = true
+    }
+    // Collapse the label the moment selection mode begins (the FAB hides anyway) and on the
+    // first list scroll. Two effects are used because snapshotFlow only re-runs on snapshot
+    // reads, and plain state.selectMode is not one — it is tracked as an effect key instead.
+    LaunchedEffect(state.selectMode) {
+        if (state.selectMode) {
+            fabExpanded = false
+            fabIntroDone = true
+        }
+    }
+    LaunchedEffect(gridState) {
+        snapshotFlow { gridState.isScrollInProgress }.collect { scrolling ->
+            if (scrolling) {
+                fabExpanded = false
+                fabIntroDone = true
+            }
+        }
+    }
+
     val deletedCount = state.lastDeleted.size
     val deletedMessage = pluralStringResource(R.plurals.notes_deleted, deletedCount, deletedCount)
     val undoLabel = stringResource(R.string.action_undo)
@@ -256,16 +298,11 @@ fun ViewNotesContent(
                 enter = fadeIn(tween(Motion.enter)) + scaleIn(tween(Motion.enter)),
                 exit = fadeOut(tween(Motion.exit)) + scaleOut(tween(Motion.exit))
             ) {
-                FloatingActionButton(
-                    onClick = onCreateNote,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = stringResource(R.string.action_new_note)
-                    )
-                }
+                NewNoteFab(
+                    expanded = fabExpanded,
+                    animationsOn = animationsOn,
+                    onClick = onCreateNote
+                )
             }
         },
         bottomBar = {
@@ -504,6 +541,61 @@ private fun MemoTopBar(onSettings: () -> Unit) {
     }
 }
 
+/**
+ * The create-note button. It starts its life extended with a "New note" label and settles
+ * back to icon-only after a moment; pressing or focusing it re-reveals the label without
+ * ever swallowing the tap itself.
+ *
+ * It is an [ExtendedFloatingActionButton], so the Scaffold keeps it anchored to the screen
+ * edge while the width transition grows it toward the interior — in RTL that is mirrored
+ * automatically because the Scaffold anchors the button to the end edge.
+ */
+@Composable
+private fun NewNoteFab(
+    expanded: Boolean,
+    animationsOn: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val focused by interactionSource.collectIsFocusedAsState()
+    val labelVisible = expanded || pressed || focused
+
+    val enter = if (animationsOn) {
+        fadeIn(tween(Motion.enter)) + expandHorizontally(tween(Motion.enter))
+    } else {
+        EnterTransition.None
+    }
+    val exit = if (animationsOn) {
+        fadeOut(tween(Motion.exit)) + shrinkHorizontally(tween(Motion.exit))
+    } else {
+        ExitTransition.None
+    }
+
+    ExtendedFloatingActionButton(
+        onClick = onClick,
+        interactionSource = interactionSource,
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = if (labelVisible) null else stringResource(R.string.action_new_note),
+            modifier = Modifier.size(Size.iconLg)
+        )
+        AnimatedVisibility(visible = labelVisible, enter = enter, exit = exit) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(Modifier.width(Space.sm))
+                Text(
+                    text = stringResource(R.string.action_new_note),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun FilterChipRow(
     selected: NoteFilter,
@@ -647,6 +739,9 @@ private fun SharedTransitionScope.noteSharedBounds(
 private const val MINUTE = 60_000L
 private const val HOUR = 60 * MINUTE
 private const val DAY = 24 * HOUR
+
+/** How long the extended "New note" button stays labelled before settling to icon-only. */
+private const val FAB_LABEL_MS = 3_000L
 
 private fun previewNotes(): List<Note> {
     val now = System.currentTimeMillis()
