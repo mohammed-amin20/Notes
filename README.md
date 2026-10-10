@@ -68,6 +68,41 @@ Built with **Kotlin** and **Jetpack Compose (Material 3)**.
   <img src="docs/screenshots/selected-dark.png" width="250" alt="Multi-select notes, dark theme"/>
 </p>
 
+#### Add / edit note — light &middot; dark
+
+<p align="center">
+  <img src="docs/screenshots/add-edit-note-light.png" width="250" alt="Add or edit note, light theme"/>
+  <img src="docs/screenshots/add-edit-note-dark.png" width="250" alt="Add or edit note, dark theme"/>
+</p>
+
+#### Login — light &middot; dark
+
+<p align="center">
+  <img src="docs/screenshots/login-light.png" width="250" alt="Login screen, light theme"/>
+  <img src="docs/screenshots/login-dark.png" width="250" alt="Login screen, dark theme"/>
+</p>
+
+#### Sign up — light &middot; dark
+
+<p align="center">
+  <img src="docs/screenshots/signup-light.png" width="250" alt="Sign up screen, light theme"/>
+  <img src="docs/screenshots/signup-dark.png" width="250" alt="Sign up screen, dark theme"/>
+</p>
+
+#### Settings — light &middot; dark
+
+<p align="center">
+  <img src="docs/screenshots/settings-light.png" width="250" alt="Settings screen, light theme"/>
+  <img src="docs/screenshots/settings-dark.png" width="250" alt="Settings screen, dark theme"/>
+</p>
+
+#### Settings states — log out dialog &middot; compact layout
+
+<p align="center">
+  <img src="docs/screenshots/settings-logout-dialog-light.png" width="250" alt="Log out confirmation dialog, light theme"/>
+  <img src="docs/screenshots/settings-narrow-light.png" width="250" alt="Settings on a narrow screen, light theme"/>
+</p>
+
 ## Tech Stack
 
 | Technology | Usage |
