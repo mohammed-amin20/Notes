@@ -277,4 +277,4 @@ Alternatively, run the app from Android Studio (Run → your device).
 
 ## Developer
 
-Developed by **Mohammed Amin Ghazal** — [GitHub](https://github.com/mohammed-amin20)
+Developed by **Mohammed Amen Ghazal** — [GitHub](https://github.com/mohammed-amin20)
