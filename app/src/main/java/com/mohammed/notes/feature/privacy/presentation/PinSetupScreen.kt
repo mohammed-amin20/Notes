@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,6 +44,7 @@ import com.mohammed.notes.R
 import com.mohammed.notes.feature.core.security.PinCrypto
 import com.mohammed.notes.ui.theme.FormMeasure
 import com.mohammed.notes.ui.theme.Motion
+import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.Space
 import com.mohammed.notes.ui.theme.rememberAnimationsEnabled
@@ -72,6 +74,35 @@ fun PinSetupScreen(
     LaunchedEffect(state.done) {
         if (state.done) onDone()
     }
+
+    PinSetupContent(
+        state = state,
+        changeMode = changeMode,
+        onDigit = viewModel::typeDigit,
+        onClear = viewModel::clearDigits,
+        onBackspace = viewModel::backspace,
+        onSubmit = viewModel::submit,
+        onBackToFirst = viewModel::backToFirst,
+        onCancel = onCancel
+    )
+}
+
+/**
+ * Stateless PIN setup body so the screen's Hilt-backed [PinSetupViewModel] stays out of
+ * @Preview. The caller owns the state and routes every callback back to the ViewModel.
+ */
+@Composable
+internal fun PinSetupContent(
+    state: PinSetupViewModel.PinSetupState,
+    changeMode: Boolean,
+    onDigit: (Char) -> Unit,
+    onClear: () -> Unit,
+    onBackspace: () -> Unit,
+    onSubmit: () -> Unit,
+    onBackToFirst: () -> Unit,
+    onCancel: () -> Unit
+) {
+    val animationsOn = rememberAnimationsEnabled()
 
     val errorRes = when (state.error) {
         PinSetupError.MISMATCH -> R.string.pin_mismatch
@@ -146,7 +177,7 @@ fun PinSetupScreen(
             }
             Spacer(Modifier.height(Space.lg))
             Button(
-                onClick = viewModel::submit,
+                onClick = onSubmit,
                 enabled = state.digits.length == PinCrypto.PIN_LENGTH && !state.saving,
                 modifier = Modifier
                     .widthIn(max = FormMeasure)
@@ -170,9 +201,9 @@ fun PinSetupScreen(
             }
             Spacer(Modifier.height(Space.lg))
             PinKeypad(
-                onDigit = viewModel::typeDigit,
-                onClear = viewModel::clearDigits,
-                onBackspace = viewModel::backspace
+                onDigit = onDigit,
+                onClear = onClear,
+                onBackspace = onBackspace
             )
             Spacer(Modifier.height(Space.lg))
             Row(
@@ -181,7 +212,7 @@ fun PinSetupScreen(
             ) {
                 if (state.step == PinStep.CONFIRM) {
                     TextButton(
-                        onClick = viewModel::backToFirst,
+                        onClick = onBackToFirst,
                         enabled = !state.saving
                     ) { Text(stringResource(R.string.action_back)) }
                 }
@@ -191,5 +222,78 @@ fun PinSetupScreen(
             }
             Spacer(Modifier.height(Space.xs))
         }
+    }
+}
+
+// --- Previews --------------------------------------------------------------
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PinSetupLightPreview() {
+    NotesTheme(darkTheme = false) {
+        PinSetupContent(
+            state = PinSetupViewModel.PinSetupState(),
+            changeMode = false,
+            onDigit = {},
+            onClear = {},
+            onBackspace = {},
+            onSubmit = {},
+            onBackToFirst = {},
+            onCancel = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PinSetupDarkPreview() {
+    NotesTheme(darkTheme = true) {
+        PinSetupContent(
+            state = PinSetupViewModel.PinSetupState(digits = "12"),
+            changeMode = false,
+            onDigit = {},
+            onClear = {},
+            onBackspace = {},
+            onSubmit = {},
+            onBackToFirst = {},
+            onCancel = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PinSetupConfirmPreview() {
+    NotesTheme(darkTheme = false) {
+        PinSetupContent(
+            state = PinSetupViewModel.PinSetupState(step = PinStep.CONFIRM),
+            changeMode = false,
+            onDigit = {},
+            onClear = {},
+            onBackspace = {},
+            onSubmit = {},
+            onBackToFirst = {},
+            onCancel = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PinSetupMismatchPreview() {
+    NotesTheme(darkTheme = false) {
+        PinSetupContent(
+            state = PinSetupViewModel.PinSetupState(
+                step = PinStep.CONFIRM,
+                error = PinSetupError.MISMATCH
+            ),
+            changeMode = false,
+            onDigit = {},
+            onClear = {},
+            onBackspace = {},
+            onSubmit = {},
+            onBackToFirst = {},
+            onCancel = {}
+        )
     }
 }

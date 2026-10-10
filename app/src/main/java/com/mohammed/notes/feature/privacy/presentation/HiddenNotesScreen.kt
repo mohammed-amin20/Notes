@@ -64,6 +64,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -75,6 +76,7 @@ import com.mohammed.notes.feature.note.presentation.components.SelectModeTopBar
 import com.mohammed.notes.ui.theme.GridSingleColumnBelow
 import com.mohammed.notes.ui.theme.GridSingleColumnFontScale
 import com.mohammed.notes.ui.theme.Motion
+import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.ReadableMeasure
 import com.mohammed.notes.ui.theme.Size
 import com.mohammed.notes.ui.theme.Space
@@ -154,6 +156,43 @@ private fun HiddenNotesScreen(
 ) {
     SecureScreen()
 
+    HiddenNotesContent(
+        onBack = onBack,
+        state = state,
+        onOpenNote = onOpenNote,
+        onToggleSelect = onToggleSelect,
+        onSelectAll = onSelectAll,
+        onClearSelection = onClearSelection,
+        onUnhide = onUnhide,
+        onDelete = onDelete,
+        onReset = onReset,
+        noteModifier = { item ->
+            with(sharedTransitionScope) {
+                hiddenNoteSharedBounds(item, animatedVisibilityScope)
+            }
+        }
+    )
+}
+
+/**
+ * Stateless vault body so it can be rendered in @Preview without Hilt or a shared
+ * element scope. The callers route every event back through the ViewModel; previews
+ * pass empty lambdas and leave [noteModifier] at its plain default. If a caller needs
+ * the card-to-editor morph, [noteModifier] supplies the shared-bounds modifier.
+ */
+@Composable
+internal fun HiddenNotesContent(
+    onBack: () -> Unit,
+    state: HiddenNotesViewModel.HiddenState,
+    onOpenNote: (Note) -> Unit,
+    onToggleSelect: (Int) -> Unit,
+    onSelectAll: () -> Unit,
+    onClearSelection: () -> Unit,
+    onUnhide: () -> Unit,
+    onDelete: () -> Unit,
+    onReset: () -> Unit,
+    noteModifier: @Composable (HiddenNotesViewModel.HiddenNoteUi) -> Modifier = { Modifier }
+) {
     val animationsOn = rememberAnimationsEnabled()
     val gridState = rememberLazyGridState()
     val fontScale = LocalDensity.current.fontScale
@@ -247,9 +286,6 @@ private fun HiddenNotesScreen(
                                 key = { index -> state.items[index].id }
                             ) { index ->
                                 val item = state.items[index]
-                                val noteModifier = with(sharedTransitionScope) {
-                                    hiddenNoteSharedBounds(item, animatedVisibilityScope)
-                                }
                                 HiddenNoteCard(
                                     item = item,
                                     today = labelDay,
@@ -261,7 +297,7 @@ private fun HiddenNotesScreen(
                                     onOpen = { if (!item.broken) onOpenNote(item.note) },
                                     onToggleSelect = { onToggleSelect(item.id) },
                                     onLongPress = { onToggleSelect(item.id) },
-                                    modifier = noteModifier.staggeredAppear(index)
+                                    modifier = noteModifier(item).staggeredAppear(index)
                                 )
                             }
                         }
@@ -490,3 +526,132 @@ private fun SharedTransitionScope.hiddenNoteSharedBounds(
         boundsTransform = { _, _ -> tween(Motion.sharedBounds) }
     )
 }
+
+// --- Previews --------------------------------------------------------------
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun HiddenNotesListLightPreview() {
+    NotesTheme(darkTheme = false) {
+        HiddenNotesContent(
+            onBack = {},
+            state = HiddenNotesViewModel.HiddenState(gate = HiddenNotesViewModel.Gate.OPEN, items = previewHiddenNotes()),
+            onOpenNote = {},
+            onToggleSelect = {},
+            onSelectAll = {},
+            onClearSelection = {},
+            onUnhide = {},
+            onDelete = {},
+            onReset = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun HiddenNotesListDarkPreview() {
+    NotesTheme(darkTheme = true) {
+        HiddenNotesContent(
+            onBack = {},
+            state = HiddenNotesViewModel.HiddenState(
+                gate = HiddenNotesViewModel.Gate.OPEN,
+                items = previewHiddenNotes().reversed()
+            ),
+            onOpenNote = {},
+            onToggleSelect = {},
+            onSelectAll = {},
+            onClearSelection = {},
+            onUnhide = {},
+            onDelete = {},
+            onReset = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun HiddenNotesEmptyPreview() {
+    NotesTheme(darkTheme = false) {
+        HiddenNotesContent(
+            onBack = {},
+            state = HiddenNotesViewModel.HiddenState(gate = HiddenNotesViewModel.Gate.OPEN),
+            onOpenNote = {},
+            onToggleSelect = {},
+            onSelectAll = {},
+            onClearSelection = {},
+            onUnhide = {},
+            onDelete = {},
+            onReset = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun HiddenNotesSelectModePreview() {
+    val notes = previewHiddenNotes()
+    NotesTheme(darkTheme = true) {
+        HiddenNotesContent(
+            onBack = {},
+            state = HiddenNotesViewModel.HiddenState(
+                gate = HiddenNotesViewModel.Gate.OPEN,
+                items = notes,
+                selectMode = true,
+                selected = notes.take(2).mapTo(HashSet()) { it.id }
+            ),
+            onOpenNote = {},
+            onToggleSelect = {},
+            onSelectAll = {},
+            onClearSelection = {},
+            onUnhide = {},
+            onDelete = {},
+            onReset = {}
+        )
+    }
+}
+
+/** Safe, synthetic vault content for previews — never real user data. */
+private fun previewHiddenNotes(): List<HiddenNotesViewModel.HiddenNoteUi> {
+    val now = System.currentTimeMillis()
+    val HOUR = 60 * 60 * 1000L
+    val DAY = 24 * HOUR
+    return listOf(
+        HiddenNotesViewModel.HiddenNoteUi(
+            id = 1,
+            title = "Birthday gift ideas",
+            snippet = "Mint tea set, a worn copy of The Little Prince, warm socks.",
+            timestamp = now - 2 * HOUR,
+            broken = false,
+            note = previewHiddenNote(1, now - 2 * HOUR)
+        ),
+        HiddenNotesViewModel.HiddenNoteUi(
+            id = 2,
+            title = "Passwords ledger",
+            snippet = "Updated the vault — rotated the email one last week.",
+            timestamp = now - 3 * DAY,
+            broken = false,
+            note = previewHiddenNote(2, now - 3 * DAY)
+        ),
+        HiddenNotesViewModel.HiddenNoteUi(
+            id = 3,
+            title = "Anniversary plan",
+            snippet = "Book the harbor table, ask about the quiet corner.",
+            timestamp = now - 5 * DAY,
+            broken = false,
+            note = previewHiddenNote(3, now - 5 * DAY)
+        )
+    )
+}
+
+/** Hidden rows keep title empty and ciphertext in [Note.text]; only the IDs vary. */
+private fun previewHiddenNote(id: Int, timestamp: Long): Note = Note(
+    id = id,
+    title = "",
+    timestamp = timestamp,
+    text = "encrypted-payload-$id",
+    userId = 1,
+    pinned = false,
+    pinTimestamp = Long.MIN_VALUE,
+    hidden = true,
+    enc_nonce = "preview-nonce-$id"
+)

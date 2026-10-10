@@ -26,11 +26,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohammed.notes.R
 import com.mohammed.notes.feature.core.security.PinCrypto
+import com.mohammed.notes.ui.theme.NotesTheme
 import com.mohammed.notes.ui.theme.Space
 import java.util.Locale
 
@@ -54,6 +56,52 @@ fun PinVerifyScreen(
         if (state.reset) onResetDone()
     }
 
+    PinVerifyContent(
+        state = state,
+        digits = digits,
+        resetDialog = resetDialog,
+        showForgotPin = showForgotPin,
+        onDigit = { d ->
+            if (digits.isEmpty()) viewModel.clearError()
+            if (digits.length < PinCrypto.PIN_LENGTH) {
+                digits += d
+                if (digits.length == PinCrypto.PIN_LENGTH) {
+                    viewModel.verify(digits)
+                    digits = ""
+                }
+            }
+        },
+        onClear = { digits = "" },
+        onBackspace = { digits = digits.dropLast(1) },
+        onCancel = onCancel,
+        onForgotPin = { resetDialog = true },
+        onDismissResetDialog = { resetDialog = false },
+        onResetConfirm = {
+            resetDialog = false
+            viewModel.resetPrivacy()
+        }
+    )
+}
+
+/**
+ * Stateless PIN verify body so the screen's Hilt-backed [PinVerifyViewModel] stays out of
+ * @Preview. [state] carries the verify/throttle status; [digits] and [resetDialog] are
+ * hoisted from the caller so the auto-submit and dialog bookkeeping survive recomposition.
+ */
+@Composable
+internal fun PinVerifyContent(
+    state: PinVerifyViewModel.PinVerifyState,
+    digits: String,
+    resetDialog: Boolean,
+    showForgotPin: Boolean,
+    onDigit: (Char) -> Unit,
+    onClear: () -> Unit,
+    onBackspace: () -> Unit,
+    onCancel: () -> Unit,
+    onForgotPin: () -> Unit,
+    onDismissResetDialog: () -> Unit,
+    onResetConfirm: () -> Unit
+) {
     Scaffold { inner ->
         Column(
             modifier = Modifier
@@ -111,27 +159,22 @@ fun PinVerifyScreen(
             }
             PinKeypad(
                 onDigit = { d ->
-                    if (state.verifying) return@PinKeypad
-                    if (digits.isEmpty()) viewModel.clearError()
-                    if (digits.length < PinCrypto.PIN_LENGTH && !state.locked) {
-                        digits += d
-                        if (digits.length == PinCrypto.PIN_LENGTH) {
-                            viewModel.verify(digits)
-                            digits = ""
-                        }
-                    }
+                    if (state.verifying || state.locked) return@PinKeypad
+                    onDigit(d)
                 },
-                onClear = { if (!state.verifying) digits = "" },
+                onClear = {
+                    if (!state.verifying) onClear()
+                },
                 onBackspace = {
                     if (digits.isNotEmpty() && !state.locked && !state.verifying) {
-                        digits = digits.dropLast(1)
+                        onBackspace()
                     }
                 }
             )
             Spacer(Modifier.height(Space.xl))
             Button(onClick = onCancel, enabled = !state.verifying) { Text(stringResource(R.string.action_cancel)) }
             if (showForgotPin && !state.locked && !state.verifying) {
-                TextButton(onClick = { resetDialog = true }) {
+                TextButton(onClick = onForgotPin) {
                     Text(stringResource(R.string.pin_forgot))
                 }
             }
@@ -140,22 +183,99 @@ fun PinVerifyScreen(
 
     if (resetDialog) {
         AlertDialog(
-            onDismissRequest = { resetDialog = false },
+            onDismissRequest = onDismissResetDialog,
             title = { Text(stringResource(R.string.pin_reset_title)) },
             text = { Text(stringResource(R.string.pin_reset_body)) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        resetDialog = false
-                        viewModel.resetPrivacy()
-                    }
-                ) { Text(stringResource(R.string.pin_reset_confirm)) }
+                TextButton(onClick = onResetConfirm) { Text(stringResource(R.string.pin_reset_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { resetDialog = false }) {
+                TextButton(onClick = onDismissResetDialog) {
                     Text(stringResource(R.string.action_cancel))
                 }
             }
+        )
+    }
+}
+
+// --- Previews --------------------------------------------------------------
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PinVerifyLightPreview() {
+    NotesTheme(darkTheme = false) {
+        PinVerifyContent(
+            state = PinVerifyViewModel.PinVerifyState(),
+            digits = "",
+            resetDialog = false,
+            showForgotPin = true,
+            onDigit = {},
+            onClear = {},
+            onBackspace = {},
+            onCancel = {},
+            onForgotPin = {},
+            onDismissResetDialog = {},
+            onResetConfirm = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PinVerifyDarkPreview() {
+    NotesTheme(darkTheme = true) {
+        PinVerifyContent(
+            state = PinVerifyViewModel.PinVerifyState(lockedRemainingMs = 60_000L),
+            digits = "",
+            resetDialog = false,
+            showForgotPin = true,
+            onDigit = {},
+            onClear = {},
+            onBackspace = {},
+            onCancel = {},
+            onForgotPin = {},
+            onDismissResetDialog = {},
+            onResetConfirm = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PinVerifyForgotDialogPreview() {
+    NotesTheme(darkTheme = false) {
+        PinVerifyContent(
+            state = PinVerifyViewModel.PinVerifyState(),
+            digits = "",
+            resetDialog = true,
+            showForgotPin = true,
+            onDigit = {},
+            onClear = {},
+            onBackspace = {},
+            onCancel = {},
+            onForgotPin = {},
+            onDismissResetDialog = {},
+            onResetConfirm = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PinVerifyLockedPreview() {
+    NotesTheme(darkTheme = true) {
+        PinVerifyContent(
+            state = PinVerifyViewModel.PinVerifyState(lockedRemainingMs = 300_000L),
+            digits = "",
+            resetDialog = false,
+            showForgotPin = true,
+            onDigit = {},
+            onClear = {},
+            onBackspace = {},
+            onCancel = {},
+            onForgotPin = {},
+            onDismissResetDialog = {},
+            onResetConfirm = {}
         )
     }
 }
