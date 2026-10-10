@@ -1,51 +1,73 @@
+<div align="center">
+
 # Memo (ميمو)
 
-<p align="center">
-  <img src="app/src/main/res/mipmap-nodpi/memo_launcher.png" width="120" alt="Memo logo"/>
-</p>
+The offline-first notes app for Android.
 
-Memo is an offline-first note-taking app for Android that keeps all data on the
-device. Create, search, pin, and organize notes, switch between English and
-Arabic (RTL), and protect private notes behind a PIN-protected, encrypted
-hidden-note vault.
+Everything you write — every note, account, and preference — lives on **your**
+device. No accounts to sync, no backend to trust, no data to lose to the cloud.
+Sign up, start typing, and your notes stay yours.
 
-Built with **Kotlin** and **Jetpack Compose (Material 3)**.
+<img src="app/src/main/res/mipmap-nodpi/memo_launcher.png" width="120" alt="Memo logo"/>
 
----
+</div>
 
-## Features
+<div align="center">
 
-- **Local accounts** — sign up, log in, and log out. A startup screen restores
-  the session automatically and validates it against the stored account.
+![Kotlin](https://img.shields.io/badge/Kotlin-2.1.21-7F52FF?logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=white)
+![Material 3](https://img.shields.io/badge/Material%203-7C4DFF?logo=materialdesign&logoColor=white)
+![Room](https://img.shields.io/badge/Room-2E7D32?logo=sqlite&logoColor=white)
+![Hilt](https://img.shields.io/badge/Hilt-026E9D)
+![minSdk 26](https://img.shields.io/badge/minSdk-26-EB732D)
+![targetSdk 35](https://img.shields.io/badge/targetSdk-35-1089D1)
+
+</div>
+
+## What you can do
+
+- **Accounts** — sign up, log in, log out with a session-restore splash.
   Credentials never leave the device.
-- **Notes** — create, edit, and delete notes with an editor that shows live
-  character/word counts and relative timestamps (e.g. "Today, 3:45 PM", "Edited …").
-  Deleting can be undone for a few seconds after the action.
-- **Search** — instant filtering of your notes as you type.
-- **Pin / unpin** — pin important notes; pinned notes float to the top of the list.
-- **Filters & categories** — filter chips for All, Pinned, Work, and Personal,
-  plus a per-note category selector.
-- **Selection mode** — multi-select notes to delete, pin/unpin, or hide them in
-  one step, including "Select all".
-- **Customizable appearance** — System, Light, or Dark theme (Material 3),
-  persisted across restarts.
-- **Languages** — switch between English and Arabic at runtime (full RTL
-  support, including an Arabic-Indic digit keypad for the PIN).
-- **Hidden notes vault** — hide private notes behind a 4-digit PIN:
-  - Two-step PIN setup with confirmation, plus change-PIN flow.
-  - Hidden note content is encrypted with AES-256-GCM; the encryption key is
-    wrapped by a key stored in the Android KeyStore. The PIN is never stored —
-    only a PBKDF2-HMAC-SHA256 verifier (600,000 iterations).
-  - Wrong-PIN attempts lock the vault for escalating periods (from 30 seconds to
-    one hour); the vault locks automatically when the app is backgrounded.
-  - "Forgot PIN?" permanently deletes the hidden notes and removes the PIN — a
-    deliberate consequence of the encryption design.
-- **Settings** — appearance, language, privacy (hidden notes / PIN), account
-  (log out), and version info.
+- **Notes** — create, edit, delete with live character/word counts and relative
+  timestamps ("Today, 3:45 PM"). Deletion is undoable.
+- **Search** — instant filtering as you type.
+- **Pin & filter** — pin notes to the top and filter by All, Pinned, Work, or
+  Personal; set a category per note.
+- **Multi-select** — delete, pin/unpin, or hide in one step, including
+  "Select all".
+- **Hidden vault** — hide notes behind a 4-digit PIN: content encrypted with
+  AES-256-GCM, key wrapped in the Android KeyStore, PIN never stored
+  (PBKDF2-HMAC-SHA256, 600k iterations).
+- **Appearance & language** — System / Light / Dark theme and English ↔ Arabic
+  (full RTL, Arabic-Indic keypad) at runtime.
 
-## Screenshots
+## Screens
+
+The app flows from a branded splash into **authentication first**, then your
+notes. All previews below are rendered from Jetpack Compose `@Preview`.
 
 > UI previews rendered from Jetpack Compose `@Preview`.
+
+#### Splash — light &middot; dark
+
+<p align="center">
+  <img src="docs/screenshots/splash-light.png" width="250" alt="Splash screen, light theme"/>
+  <img src="docs/screenshots/splash-dark.png" width="250" alt="Splash screen, dark theme"/>
+</p>
+
+#### Sign up — light &middot; dark
+
+<p align="center">
+  <img src="docs/screenshots/signup-light.png" width="250" alt="Sign up screen, light theme"/>
+  <img src="docs/screenshots/signup-dark.png" width="250" alt="Sign up screen, dark theme"/>
+</p>
+
+#### Login — light &middot; dark
+
+<p align="center">
+  <img src="docs/screenshots/login-light.png" width="250" alt="Login screen, light theme"/>
+  <img src="docs/screenshots/login-dark.png" width="250" alt="Login screen, dark theme"/>
+</p>
 
 #### Notes list — light &middot; dark
 
@@ -75,35 +97,61 @@ Built with **Kotlin** and **Jetpack Compose (Material 3)**.
   <img src="docs/screenshots/add-edit-note-dark.png" width="250" alt="Add or edit note, dark theme"/>
 </p>
 
-#### Login — light &middot; dark
-
-<p align="center">
-  <img src="docs/screenshots/login-light.png" width="250" alt="Login screen, light theme"/>
-  <img src="docs/screenshots/login-dark.png" width="250" alt="Login screen, dark theme"/>
-</p>
-
-#### Sign up — light &middot; dark
-
-<p align="center">
-  <img src="docs/screenshots/signup-light.png" width="250" alt="Sign up screen, light theme"/>
-  <img src="docs/screenshots/signup-dark.png" width="250" alt="Sign up screen, dark theme"/>
-</p>
-
 #### Settings — light &middot; dark
 
 <p align="center">
-  <img src="docs/screenshots/settings-light.png" width="250" alt="Settings screen, light theme"/>
-  <img src="docs/screenshots/settings-dark.png" width="250" alt="Settings screen, dark theme"/>
+  <img src="docs/screenshots/settings-light.png" width="210" alt="Settings screen, light theme"/>
+  <img src="docs/screenshots/settings-dark.png" width="210" alt="Settings screen, dark theme"/>
 </p>
 
 #### Settings states — log out dialog &middot; compact layout
 
 <p align="center">
-  <img src="docs/screenshots/settings-logout-dialog-light.png" width="250" alt="Log out confirmation dialog, light theme"/>
-  <img src="docs/screenshots/settings-narrow-light.png" width="250" alt="Settings on a narrow screen, light theme"/>
+  <img src="docs/screenshots/settings-logout-dialog-light.png" width="210" alt="Log out confirmation dialog, light theme"/>
+  <img src="docs/screenshots/settings-narrow-light.png" width="210" alt="Settings on a narrow screen, light theme"/>
 </p>
 
-## Tech Stack
+#### PIN setup — create &middot; confirm &middot; mismatch
+
+<p align="center">
+  <img src="docs/screenshots/pin-setup-light.png" width="210" alt="PIN setup, light theme"/>
+  <img src="docs/screenshots/pin-setup-dark.png" width="210" alt="PIN setup, dark theme"/>
+  <img src="docs/screenshots/pin-setup-confirm.png" width="210" alt="PIN setup confirmation step"/>
+  <img src="docs/screenshots/pin-setup-mismatch.png" width="210" alt="PIN mismatch warning"/>
+</p>
+
+#### PIN verify — unlocked &middot; forgot &middot; locked
+
+<p align="center">
+  <img src="docs/screenshots/pin-verify-light.png" width="210" alt="PIN verification, light theme"/>
+  <img src="docs/screenshots/pin-verify-dark.png" width="210" alt="PIN verification, dark theme"/>
+  <img src="docs/screenshots/pin-verify-forget-dialog.png" width="210" alt="Forgot PIN dialog"/>
+  <img src="docs/screenshots/pin-verify-locked.png" width="210" alt="Vault locked state"/>
+</p>
+
+#### Hidden notes vault — list &middot; select &middot; empty
+
+<p align="center">
+  <img src="docs/screenshots/hidden-notes-list-light.png" width="210" alt="Hidden notes list, light theme"/>
+  <img src="docs/screenshots/hidden-notes-list-dark.png" width="210" alt="Hidden notes list, dark theme"/>
+  <img src="docs/screenshots/hidden-notes-select-mode.png" width="210" alt="Hidden notes selection mode"/>
+  <img src="docs/screenshots/hidden-notes-empty.png" width="210" alt="Empty hidden notes list"/>
+</p>
+
+## Privacy, seriously
+
+Hidden notes are **not** just tucked out of sight — they are encrypted.
+
+- **Two-step PIN setup** with confirmation, plus a change-PIN flow.
+- Note content encrypted with **AES-256-GCM**; the encryption key is wrapped by
+  a key stored in the **Android KeyStore**. The PIN is **never stored** — only a
+  PBKDF2-HMAC-SHA256 verifier (600,000 iterations).
+- Wrong-PIN attempts lock the vault for **escalating periods** (30 seconds up to
+  one hour); the vault locks automatically when the app is backgrounded.
+- "Forgot PIN?" permanently deletes the hidden notes and removes the PIN — a
+  deliberate consequence of the encryption design.
+
+## Tech stack
 
 | Technology | Usage |
 |------------|-------|
@@ -118,7 +166,7 @@ Built with **Kotlin** and **Jetpack Compose (Material 3)**.
 There is no backend: authentication, notes, and preferences are all stored in a
 local Room database and shared preferences on the device.
 
-## Project Structure
+## Project structure
 
 Single-module Android app (`:app`), organized by feature:
 
@@ -155,7 +203,7 @@ app/src/main/java/com/mohammed/notes/
 3. No API keys, secrets, or environment variables are required — the project
    needs no network services at build time.
 
-## Building the Debug APK
+## Building the debug APK
 
 Building does **not** require a connected device.
 
@@ -177,7 +225,7 @@ The debug APK (auto-signed with the debug keystore) is written to:
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
-### Installing on a Device (optional)
+### Installing on a device (optional)
 
 Installation is separate from building and requires an Android device or
 emulator (with USB debugging enabled) to be connected:
@@ -192,18 +240,13 @@ emulator (with USB debugging enabled) to be connected:
 
 Alternatively, run the app from Android Studio (Run → your device).
 
-## Tests and Checks
-
-The repository contains the following tests (they are included for development;
-how many currently pass is not stated here):
+## Tests and checks
 
 - `PinCryptoTest` — host-based unit tests for PIN digit normalization, PBKDF2
   derivation, and AES-GCM round trips.
 - `PinThrottleTest` — host-based unit tests for the PIN cooldown schedule.
 - `ExampleUnitTest` — stock JVM smoke test.
 - `ExampleInstrumentedTest` — stock instrumented smoke test (requires a device).
-
-Run them with:
 
 ```powershell
 .\gradlew.bat :app:testDebugUnitTest    # unit tests on the JVM
@@ -222,14 +265,13 @@ Run them with:
   and validated locally in the database in plaintext. Do not reuse passwords
   you use elsewhere.
 - **Hidden-note protection.** If the PIN is forgotten, resetting privacy
-  permanently deletes hidden notes — this is enforced by the encryption design
-  and cannot be undone. Hidden notes do not appear in the main list, search, or
+  permanently deletes hidden notes — enforced by the encryption design and
+  cannot be undone. Hidden notes do not appear in the main list, search, or
   pinned section.
 - **Device restore & migration.** The Android KeyStore key and the PIN
-  preference are not backed up. Android backup/device-transfer rules exclude
-  the PIN preferences, so after a restore or migration hidden notes may be
-  present but undecryptable; the app surfaces such rows as "broken" so they can
-  still be deleted.
+  preference are not backed up. After a restore or migration hidden notes may
+  be present but undecryptable; the app surfaces such rows as "broken" so they
+  can still be deleted.
 - **Risky operations.** Hidden-note security relies on the Android KeyStore; a
   device that loses its Keystore keys cannot decrypt hidden content.
 
