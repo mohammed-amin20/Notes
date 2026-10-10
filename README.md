@@ -45,14 +45,28 @@ Built with **Kotlin** and **Jetpack Compose (Material 3)**.
 
 ## Screenshots
 
-| | | |
-|---|---|---|
-| ![Sign Up](sign.jpg) | ![Login](login.jpg) | ![Notes](notes.jpg) |
-| Sign Up | Login | Notes screen |
-| ![Add Note](addNote.jpg) | ![Search](search.jpg) | ![Select & manage](cheakbox.jpg) |
-| Add note | Search | Select & manage |
-| ![Pin note](binNote.jpg) | ![Unpin note](unbinNote.jpg) | ![Logout](logOut.jpg) |
-| Pin note | Unpin note | Logout |
+> UI previews rendered from Jetpack Compose `@Preview`.
+
+#### Notes list — light &middot; dark
+
+<p align="center">
+  <img src="docs/screenshots/notes-light.png" width="250" alt="Notes list, light theme"/>
+  <img src="docs/screenshots/notes-dark.png" width="250" alt="Notes list, dark theme"/>
+</p>
+
+#### Search — results &middot; no results
+
+<p align="center">
+  <img src="docs/screenshots/search-light.png" width="250" alt="Searching notes, light theme"/>
+  <img src="docs/screenshots/search-dark.png" width="250" alt="Search with no results, dark theme"/>
+</p>
+
+#### Empty state &middot; selection mode
+
+<p align="center">
+  <img src="docs/screenshots/no-notes-light.png" width="250" alt="Empty notes list, light theme"/>
+  <img src="docs/screenshots/selected-dark.png" width="250" alt="Multi-select notes, dark theme"/>
+</p>
 
 ## Tech Stack
 
